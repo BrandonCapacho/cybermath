@@ -8,30 +8,30 @@ public class TiendaHardware {
 
     public TiendaHardware() {
         catalogo = new ArrayList<>();
-        // Items temáticos de hardware para tu juego
-        catalogo.add(new ItemHardware("Módulo RAM 8GB", 150, "REPARAR"));
-        catalogo.add(new ItemHardware("SSD NVMe", 300, "MEJORAR_VELOCIDAD"));
+        catalogo.add(new ItemHardware("PARCHE DE KERNEL (Recupera 30% HP)", 150, "CURAR_30"));
+        catalogo.add(new ItemHardware("BACKUP DEL SISTEMA (Restaura 100% HP)", 400, "CURAR_100"));
     }
 
     public String comprar(int indice, Usuario comprador) {
         if (indice < 0 || indice >= catalogo.size()) return "ID Inválido.";
-
         ItemHardware item = catalogo.get(indice);
 
         if (comprador.getCriptos() >= item.getPrecio()) {
             comprador.gastarCriptos(item.getPrecio());
-            if (item.getEfecto().equals("REPARAR")) {
+
+            if (item.getEfecto().equals("CURAR_30")) {
+                comprador.curar(30);
+            } else if (item.getEfecto().equals("CURAR_100")) {
                 comprador.repararTotalmente();
             }
-            return ">> COMPRA EXITOSA: " + item.getNombre();
+            return ">> COMPRA EXITOSA: " + item.getNombre() + " APLICADO.";
         }
-        return ">> ERROR: CRIPTOS INSUFICIENTES";
+        return ">> ERROR: FONDOS BTC INSUFICIENTES.";
     }
 
     public List<ItemHardware> getCatalogo() { return catalogo; }
 }
 
-// Clase de apoyo para los objetos de la tienda
 class ItemHardware {
     private String nombre;
     private int precio;

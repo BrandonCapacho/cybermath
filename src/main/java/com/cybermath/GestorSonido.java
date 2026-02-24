@@ -7,7 +7,6 @@ public class GestorSonido {
 
     public void reproducir(String nombreArchivo) {
         try {
-            // Busca el archivo en resources/sounds/
             URL ruta = getClass().getResource("/sounds/" + nombreArchivo);
             if (ruta != null) {
                 AudioClip clip = new AudioClip(ruta.toExternalForm());
@@ -23,4 +22,6 @@ public class GestorSonido {
     public void playSuccess() { reproducir("success.mp3"); }
     public void playError() { reproducir("error.mp3"); }
     public void playIntro() { reproducir("boot.mp3"); }
+    public void playAmenaza() { reproducir("amenaza.mp3"); }
+    public void playInfiltrado() { reproducir("infiltrated.mp3"); }
 }

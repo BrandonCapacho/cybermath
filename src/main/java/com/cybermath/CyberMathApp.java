@@ -24,6 +24,8 @@ public class CyberMathApp extends Application {
     private Scene escenaPrincipal;
     private LogicaJuego logica = new LogicaJuego();
     private Usuario jugador;
+    private GestorSonido audio = new GestorSonido();
+    private TiendaHardware tienda = new TiendaHardware();
 
     // UI Global
     private Label lblHeader = new Label();
@@ -34,7 +36,6 @@ public class CyberMathApp extends Application {
     private TextField txtRespuesta = new TextField();
     private Button btnHack = new Button("EJECUTAR CÓDIGO [ENTER]");
 
-    // Estado
     private VBox rootJuego;
     private Timeline timerAnimacion;
     private int tiempoRestante;
@@ -42,6 +43,7 @@ public class CyberMathApp extends Application {
     private int preguntasPendientes;
     private int totalPreguntasActual;
     private int nivelActualJugando;
+    private boolean alarmaSonando = false;
 
     @Override
     public void start(Stage stage) {
@@ -54,7 +56,7 @@ public class CyberMathApp extends Application {
         ventana.setTitle("CYBERMATH: PROTOCOL ZERO");
         ventana.show();
 
-        mostrarIntroHistoria();
+        mostrarIntroHistoria(); // <-- RESTAURADA LA HISTORIA INICIAL
     }
 
     private void cargarCSS() {
@@ -64,42 +66,9 @@ public class CyberMathApp extends Application {
         } catch (Exception e) {}
     }
 
-    // --- 1. PANTALLA DE HISTORIA (INTRO) ---
-    private void mostrarIntroHistoria() {
-        VBox root = new VBox(20);
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("root");
-        root.setPadding(new Insets(50));
-
-        Label lblTitulo = new Label("AÑO 2088...");
-        lblTitulo.setId("lblReto");
-
-        TextArea txtHistoria = new TextArea();
-        txtHistoria.setWrapText(true);
-        txtHistoria.setEditable(false);
-        txtHistoria.getStyleClass().add("text-area");
-        txtHistoria.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff41; -fx-control-inner-background: black;");
-        txtHistoria.setPrefHeight(300);
-        txtHistoria.setMaxWidth(800);
-
-        Button btnContinuar = new Button("INICIAR SISTEMA >>");
-        btnContinuar.getStyleClass().add("button-hack");
-        btnContinuar.setVisible(false);
-        btnContinuar.setOnAction(e -> mostrarSelectorSlots());
-
-        root.getChildren().addAll(lblTitulo, txtHistoria, btnContinuar);
-        escenaPrincipal.setRoot(root);
-
-        String historia = "La red global 'The Hive' ha colapsado.\n\n" +
-                "Corporaciones rivales han llenado el ciberespacio de malware, ransomware y trampas lógicas.\n\n" +
-                "Eres un Arquitecto de Sistemas Renegado. Tu misión es restaurar los nodos corruptos usando algoritmos matemáticos olvidados.\n\n" +
-                "El destino de la información libre depende de tu velocidad mental.\n\n" +
-                "Conectando...";
-
-        escribirTextoAnimado(txtHistoria, historia, () -> btnContinuar.setVisible(true));
-    }
-
+    // --- EFECTO MÁQUINA DE ESCRIBIR (RESTAURADO) ---
     private void escribirTextoAnimado(TextArea area, String texto, Runnable alTerminar) {
+        area.clear();
         new Thread(() -> {
             for (char c : texto.toCharArray()) {
                 try {
@@ -113,7 +82,43 @@ public class CyberMathApp extends Application {
         }).start();
     }
 
-    // --- 2. SELECTOR DE SLOTS ---
+    // --- PANTALLA DE HISTORIA INICIAL ---
+    private void mostrarIntroHistoria() {
+        audio.playIntro(); // SONIDO BOOT
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        root.getStyleClass().add("root");
+        root.setPadding(new Insets(50));
+
+        Label lblTitulo = new Label("INICIALIZANDO KERNEL...");
+        lblTitulo.setId("lblReto");
+
+        TextArea txtHistoria = new TextArea();
+        txtHistoria.setWrapText(true);
+        txtHistoria.setEditable(false);
+        txtHistoria.getStyleClass().add("text-area");
+        txtHistoria.setStyle("-fx-font-size: 18px; -fx-text-fill: #00ff41; -fx-control-inner-background: black;");
+        txtHistoria.setPrefHeight(300);
+        txtHistoria.setMaxWidth(800);
+
+        Button btnContinuar = new Button("CONECTAR AL SISTEMA >>");
+        btnContinuar.getStyleClass().add("button-hack");
+        btnContinuar.setVisible(false);
+        btnContinuar.setOnAction(e -> mostrarSelectorSlots());
+
+        root.getChildren().addAll(lblTitulo, txtHistoria, btnContinuar);
+        escenaPrincipal.setRoot(root);
+
+        String historia = "AÑO 2088. LA RED GLOBAL 'THE HIVE' HA COLAPSADO.\n\n" +
+                "Corporaciones rivales han llenado el ciberespacio de malware, ransomware y trampas lógicas.\n\n" +
+                "Eres un Arquitecto de Sistemas Renegado. Tu misión es restaurar los nodos corruptos usando algoritmos matemáticos y lógica de programación.\n\n" +
+                "ADVERTENCIA: Si la integridad de tu conexión llega a 0%, tu perfil será purgado del servidor.\n\n" +
+                "Estableciendo conexión segura...";
+
+        escribirTextoAnimado(txtHistoria, historia, () -> btnContinuar.setVisible(true));
+    }
+
+    // --- SELECTOR DE PERFILES ---
     private void mostrarSelectorSlots() {
         VBox root = new VBox(30);
         root.setAlignment(Pos.CENTER);
@@ -130,6 +135,7 @@ public class CyberMathApp extends Application {
             int slot = i;
             btn.setOnAction(e -> {
                 jugador = new Usuario("HACKER_0" + slot);
+                audio.playInfiltrado();
                 mostrarMapaArbol();
             });
             panelSlots.getChildren().add(btn);
@@ -138,34 +144,35 @@ public class CyberMathApp extends Application {
         escenaPrincipal.setRoot(root);
     }
 
-    // --- 3. MAPA DE ÁRBOL ESTILIZADO (NUEVO) ---
+    // --- MAPA DE ÁRBOL Y TIENDA ---
     private void mostrarMapaArbol() {
         Pane mapaCanvas = new Pane();
         mapaCanvas.getStyleClass().add("root");
 
-        Label titulo = new Label("ARQUITECTURA DE RED - NÚCLEO CENTRAL");
+        Label titulo = new Label("SISTEMA CENTRAL - SELECCIONE NODO");
         titulo.setLayoutX(20); titulo.setLayoutY(20);
         titulo.setId("lblReto");
         mapaCanvas.getChildren().add(titulo);
 
-        // INICIO DESDE ABAJO (Árbol)
-        double centerX = 500;
-        double centerY = 700;
+        Label lblEstado = new Label("OP: " + jugador.getNombre() + " | HP: " + Math.max(0, jugador.getIntegridad()) + "% | BTC: " + jugador.getCriptos());
+        lblEstado.setStyle("-fx-text-fill: #00ff41; -fx-font-size: 16px; -fx-font-weight: bold;");
+        lblEstado.setLayoutX(20); lblEstado.setLayoutY(70);
+        mapaCanvas.getChildren().add(lblEstado);
 
-        // NODO CENTRAL (Nivel 1)
+        double centerX = 500; double centerY = 700;
+
         crearNodoEstilizado(mapaCanvas, centerX, centerY, 1, true);
-
-        // RAMAS CRECIENDO HACIA ARRIBA
-        // Rama 1: Phishing (Centro Arriba)
         dibujarRama(mapaCanvas, centerX, centerY, 2, 11, -90);
-        // Rama 2: Firewall (Diagonal Arriba-Derecha)
         dibujarRama(mapaCanvas, centerX, centerY, 12, 21, -60);
-        // Rama 3: Cripto (Más a la Derecha)
         dibujarRama(mapaCanvas, centerX, centerY, 22, 31, -30);
-        // Rama 4: SQL (Diagonal Arriba-Izquierda)
         dibujarRama(mapaCanvas, centerX, centerY, 32, 41, -120);
-        // Rama 5: DDoS (Más a la Izquierda)
         dibujarRama(mapaCanvas, centerX, centerY, 42, 50, -150);
+
+        Button btnTienda = new Button(">> MERCADO NEGRO (TIENDA)");
+        btnTienda.getStyleClass().add("button-hack");
+        btnTienda.setLayoutX(700); btnTienda.setLayoutY(20);
+        btnTienda.setOnAction(e -> mostrarTienda());
+        mapaCanvas.getChildren().add(btnTienda);
 
         Button btnVolver = new Button("CERRAR SESIÓN");
         btnVolver.getStyleClass().add("button-hack");
@@ -180,12 +187,9 @@ public class CyberMathApp extends Application {
     }
 
     private void dibujarRama(Pane canvas, double startX, double startY, int nivelInicio, int nivelFin, double anguloGrados) {
-        double currentX = startX;
-        double currentY = startY;
-        double distancia = 80; // Un poco más de separación
+        double currentX = startX; double currentY = startY;
+        double distancia = 80;
         double rad = Math.toRadians(anguloGrados);
-
-        // Color Neón Cian
         Color neonColor = Color.web("#00ffff");
 
         for (int i = nivelInicio; i <= nivelFin; i++) {
@@ -194,70 +198,90 @@ public class CyberMathApp extends Application {
             double nextY = currentY + (Math.sin(rad) * distancia) + (Math.cos(rad) * zigZag * 0.3);
 
             Line cable = new Line(currentX, currentY, nextX, nextY);
-            cable.setStroke(Color.web("#004444")); // Base oscura
+            cable.setStroke(Color.web("#004444"));
             cable.setStrokeWidth(3);
-
             if (i <= jugador.getNivelMaximo() + 1) {
-                cable.setStroke(neonColor); // Brillo si está accesible
+                cable.setStroke(neonColor);
                 cable.setOpacity(0.8);
-                cable.setEffect(new DropShadow(10, neonColor)); // Efecto de luz
+                cable.setEffect(new DropShadow(10, neonColor));
             }
             canvas.getChildren().add(0, cable);
-
             boolean desbloqueado = (i <= jugador.getNivelMaximo());
             crearNodoEstilizado(canvas, nextX, nextY, i, desbloqueado);
-
-            currentX = nextX;
-            currentY = nextY;
+            currentX = nextX; currentY = nextY;
         }
     }
 
-    // --- NUEVO MÉTODO PARA NODO CON FORMA DE ESCUDO ---
     private void crearNodoEstilizado(Pane canvas, double x, double y, int nivel, boolean desbloqueado) {
         StackPane nodoStack = new StackPane();
-        nodoStack.setLayoutX(x - 25); // Centrar el StackPane
-        nodoStack.setLayoutY(y - 25);
+        nodoStack.setLayoutX(x - 25); nodoStack.setLayoutY(y - 25);
 
-        // Forma Geométrica Compleja (Escudo)
         Polygon baseShape = new Polygon();
-        baseShape.getPoints().addAll(new Double[]{
-                0.0, -25.0,  // Punta Superior
-                20.0, -10.0, // Hombro Derecho
-                15.0, 15.0,  // Base Derecha
-                0.0, 25.0,   // Punta Inferior
-                -15.0, 15.0, // Base Izquierda
-                -20.0, -10.0 // Hombro Izquierdo
-        });
-
-        Color neonColor = Color.web("#00ffff"); // Cian brillante
-        baseShape.setStroke(neonColor);
-        baseShape.setStrokeWidth(2);
+        baseShape.getPoints().addAll(new Double[]{ 0.0, -25.0, 20.0, -10.0, 15.0, 15.0, 0.0, 25.0, -15.0, 15.0, -20.0, -10.0 });
+        Color neonColor = Color.web("#00ffff");
+        baseShape.setStroke(neonColor); baseShape.setStrokeWidth(2);
 
         if (desbloqueado) {
-            baseShape.setFill(Color.web("#002233")); // Relleno oscuro azulado
-            baseShape.setEffect(new DropShadow(15, neonColor)); // Resplandor intenso
-
+            baseShape.setFill(Color.web("#002233"));
+            baseShape.setEffect(new DropShadow(15, neonColor));
             Label lblNum = new Label(String.valueOf(nivel));
             lblNum.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
 
-            // Interactividad
             nodoStack.setCursor(Cursor.HAND);
             nodoStack.setOnMouseClicked(e -> mostrarBriefingMision(nivel));
             nodoStack.setOnMouseEntered(e -> baseShape.setFill(neonColor.deriveColor(0, 1, 1, 0.3)));
             nodoStack.setOnMouseExited(e -> baseShape.setFill(Color.web("#002233")));
-
             nodoStack.getChildren().addAll(baseShape, lblNum);
         } else {
-            baseShape.setFill(Color.BLACK);
-            baseShape.setStroke(Color.GRAY);
-            baseShape.setOpacity(0.4);
+            baseShape.setFill(Color.BLACK); baseShape.setStroke(Color.GRAY); baseShape.setOpacity(0.4);
             nodoStack.getChildren().add(baseShape);
         }
-
         canvas.getChildren().add(nodoStack);
     }
 
-    // --- 4. BRIEFING ANIMADO ---
+    // --- INTERFAZ DE TIENDA ---
+    private void mostrarTienda() {
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        root.getStyleClass().add("root");
+
+        Label titulo = new Label(">>> MERCADO NEGRO (DEEP WEB) <<<");
+        titulo.setId("lblReto");
+        titulo.setStyle("-fx-text-fill: #ff00ff;");
+
+        Label lblFondos = new Label("FONDOS DISPONIBLES: " + jugador.getCriptos() + " BTC\nINTEGRIDAD ACTUAL: " + Math.max(0, jugador.getIntegridad()) + "%");
+        lblFondos.setStyle("-fx-text-fill: white; -fx-font-size: 18px;");
+
+        VBox listaItems = new VBox(15);
+        listaItems.setAlignment(Pos.CENTER);
+
+        for (int i = 0; i < tienda.getCatalogo().size(); i++) {
+            ItemHardware item = tienda.getCatalogo().get(i);
+            Button btnItem = new Button(item.getNombre() + " - COSTO: " + item.getPrecio() + " BTC");
+            btnItem.getStyleClass().add("button-hack");
+            btnItem.setPrefWidth(500);
+            int index = i;
+            btnItem.setOnAction(e -> {
+                String resultado = tienda.comprar(index, jugador);
+                if (resultado.contains("EXITOSA")) {
+                    audio.playSuccess();
+                } else {
+                    audio.playError();
+                }
+                mostrarTienda();
+            });
+            listaItems.getChildren().add(btnItem);
+        }
+
+        Button btnVolver = new Button("VOLVER AL MAPA");
+        btnVolver.getStyleClass().add("button-hack");
+        btnVolver.setOnAction(e -> mostrarMapaArbol());
+
+        root.getChildren().addAll(titulo, lblFondos, listaItems, btnVolver);
+        escenaPrincipal.setRoot(root);
+    }
+
+    // --- BRIEFING ANIMADO (RESTAURADO) ---
     private void mostrarBriefingMision(int nivel) {
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
@@ -268,16 +292,14 @@ public class CyberMathApp extends Application {
         lblTitulo.setId("lblReto");
 
         TextArea txtDetalles = new TextArea();
-        txtDetalles.setWrapText(true);
-        txtDetalles.setEditable(false);
+        txtDetalles.setWrapText(true); txtDetalles.setEditable(false);
         txtDetalles.getStyleClass().add("text-area");
         txtDetalles.setStyle("-fx-font-size: 16px; -fx-text-fill: #00ff41; -fx-control-inner-background: black;");
-        txtDetalles.setPrefHeight(250);
-        txtDetalles.setMaxWidth(700);
+        txtDetalles.setPrefHeight(250); txtDetalles.setMaxWidth(700);
 
         Button btnIniciar = new Button("EJECUTAR HACKEO");
         btnIniciar.getStyleClass().add("button-hack");
-        btnIniciar.setVisible(false);
+        btnIniciar.setVisible(false); // Oculto hasta que termine la escritura
         btnIniciar.setOnAction(e -> iniciarJuego(nivel));
 
         Button btnCancelar = new Button("CANCELAR");
@@ -290,17 +312,16 @@ public class CyberMathApp extends Application {
         root.getChildren().addAll(lblTitulo, txtDetalles, botones);
         escenaPrincipal.setRoot(root);
 
-        String descripcion = logica.getDescripcionMision(nivel) +
-                "\n\nSECUENCIAS A RESOLVER: " + logica.getPreguntasPorNivel(nivel);
-
+        String descripcion = logica.getDescripcionMision(nivel) + "\n\nSECUENCIAS A RESOLVER: " + logica.getPreguntasPorNivel(nivel);
         escribirTextoAnimado(txtDetalles, descripcion, () -> btnIniciar.setVisible(true));
     }
 
-    // --- 5. JUEGO PRINCIPAL ---
+    // --- JUEGO PRINCIPAL ---
     private void iniciarJuego(int nivel) {
         this.nivelActualJugando = nivel;
         this.totalPreguntasActual = logica.getPreguntasPorNivel(nivel);
         this.preguntasPendientes = totalPreguntasActual;
+        this.alarmaSonando = false;
 
         rootJuego = new VBox(20);
         rootJuego.getStyleClass().add("root");
@@ -322,8 +343,7 @@ public class CyberMathApp extends Application {
         Label lblTitle = new Label(">>> CONSOLA DE COMANDOS");
         lblTitle.getStyleClass().add("panel-title");
         lblReto.setId("lblReto");
-        txtLog.setEditable(false);
-        txtLog.setPrefHeight(150);
+        txtLog.setEditable(false); txtLog.setPrefHeight(150);
         txtLog.setText("[SYSTEM]: CONECTADO AL NODO " + nivel + "...\n");
         terminal.getChildren().addAll(lblTitle, lblReto, txtLog);
 
@@ -332,8 +352,7 @@ public class CyberMathApp extends Application {
         inputArea.setAlignment(Pos.CENTER);
         txtRespuesta.setPromptText("CODE...");
         btnHack.getStyleClass().add("button-hack");
-        btnHack.setPrefWidth(400);
-        btnHack.setDefaultButton(true);
+        btnHack.setPrefWidth(400); btnHack.setDefaultButton(true);
         btnHack.setOnAction(e -> verificarRespuesta());
         inputArea.getChildren().addAll(txtRespuesta, btnHack);
 
@@ -346,12 +365,8 @@ public class CyberMathApp extends Application {
     private void nuevoReto() {
         if (jugador.getIntegridad() <= 0) return;
         int preguntaActual = (totalPreguntasActual - preguntasPendientes) + 1;
-        String retoTexto = logica.generarReto(nivelActualJugando, preguntaActual, totalPreguntasActual);
-
-        lblReto.setText(retoTexto);
-        txtRespuesta.clear();
-        txtRespuesta.setDisable(false);
-        txtRespuesta.requestFocus();
+        lblReto.setText(logica.generarReto(nivelActualJugando, preguntaActual, totalPreguntasActual));
+        txtRespuesta.clear(); txtRespuesta.setDisable(false); txtRespuesta.requestFocus();
         iniciarTemporizador();
     }
 
@@ -360,6 +375,7 @@ public class CyberMathApp extends Application {
         tiempoRestante = TIEMPO_MAX;
         barraTiempo.setProgress(1.0);
         rootJuego.getStyleClass().remove("alarma-roja");
+        alarmaSonando = false;
 
         timerAnimacion = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             tiempoRestante--;
@@ -367,9 +383,16 @@ public class CyberMathApp extends Application {
             double progreso = (double)tiempoRestante / TIEMPO_MAX;
             barraTiempo.setProgress(progreso);
 
-            if (progreso < 0.3 && !rootJuego.getStyleClass().contains("alarma-roja")) {
-                rootJuego.getStyleClass().add("alarma-roja");
+            if (progreso < 0.3) {
+                if (!rootJuego.getStyleClass().contains("alarma-roja")) {
+                    rootJuego.getStyleClass().add("alarma-roja");
+                }
+                if (!alarmaSonando) {
+                    audio.playAmenaza();
+                    alarmaSonando = true;
+                }
             }
+
             if (tiempoRestante <= 0) procesarFallo("TIMEOUT");
         }));
         timerAnimacion.setCycleCount(Timeline.INDEFINITE);
@@ -381,6 +404,7 @@ public class CyberMathApp extends Application {
         try {
             double res = Double.parseDouble(txtRespuesta.getText());
             if (logica.verificar(res)) {
+                audio.playSuccess();
                 preguntasPendientes--;
                 txtLog.appendText("\n> [OK] SECUENCIA VALIDADA.");
 
@@ -388,8 +412,8 @@ public class CyberMathApp extends Application {
                     timerAnimacion.stop();
                     jugador.sumarCriptos(100);
                     jugador.completarNivel(nivelActualJugando);
-                    txtLog.appendText("\n> [SUCCESS] NODO CAPTURADO.");
-
+                    txtLog.appendText("\n> [SUCCESS] NODO CAPTURADO. +100 BTC.");
+                    actualizarHeader();
                     new Thread(() -> {
                         try { Thread.sleep(1500); Platform.runLater(this::mostrarMapaArbol); } catch(Exception ex){}
                     }).start();
@@ -399,25 +423,39 @@ public class CyberMathApp extends Application {
             } else {
                 procesarFallo("HASH INVÁLIDO");
             }
-        } catch (Exception e) { txtLog.appendText("\n> [ERROR] SINTAXIS."); }
+        } catch (Exception e) { txtLog.appendText("\n> [ERROR] SINTAXIS."); audio.playError(); }
     }
 
+    // --- MANEJO DEL GAME OVER (RESTAURADO) ---
     private void procesarFallo(String motivo) {
+        audio.playError();
         jugador.recibirDaño();
-        txtLog.appendText("\n> [FAIL] " + motivo + ". DAÑO: -34%");
+        txtLog.appendText("\n> [FAIL] " + motivo + ". DAÑO CRÍTICO.");
         actualizarHeader();
+
         if (jugador.getIntegridad() <= 0) {
             timerAnimacion.stop();
             lblReto.setText("SYSTEM FAILURE");
-            txtRespuesta.setDisable(true);
-            btnHack.setDisable(true);
+            txtRespuesta.setDisable(true); btnHack.setDisable(true);
+            txtLog.appendText("\n\n> INTEGRIDAD AL 0%. SISTEMA DESTRUIDO.\n> REINICIANDO CONEXIÓN AL NÚCLEO...");
+
+            if (!rootJuego.getStyleClass().contains("alarma-roja")) {
+                rootJuego.getStyleClass().add("alarma-roja");
+            }
+
+            // Redirige al menú principal después de 3.5 segundos
+            new Thread(() -> {
+                try { Thread.sleep(3500); } catch(Exception ex){}
+                Platform.runLater(this::mostrarSelectorSlots);
+            }).start();
+
         } else {
             iniciarTemporizador();
         }
     }
 
     private void actualizarHeader() {
-        lblHeader.setText("OP: " + jugador.getNombre() + " | HP: " + jugador.getIntegridad() + "% | BTC: " + jugador.getCriptos());
+        lblHeader.setText("OP: " + jugador.getNombre() + " | HP: " + Math.max(0, jugador.getIntegridad()) + "% | BTC: " + jugador.getCriptos());
     }
 
     public static void main(String[] args) { launch(args); }
