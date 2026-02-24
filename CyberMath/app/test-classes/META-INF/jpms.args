@@ -1,0 +1,4 @@
+--patch-module
+com.cybermath=_
+--add-reads
+com.cybermath=ALL-UNNAMED

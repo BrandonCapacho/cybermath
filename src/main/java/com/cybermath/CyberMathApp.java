@@ -26,6 +26,7 @@ public class CyberMathApp extends Application {
     private Usuario jugador;
     private GestorSonido audio = new GestorSonido();
     private TiendaHardware tienda = new TiendaHardware();
+    private int slotActual;
 
     // UI Global
     private Label lblHeader = new Label();
@@ -56,7 +57,7 @@ public class CyberMathApp extends Application {
         ventana.setTitle("CYBERMATH: PROTOCOL ZERO");
         ventana.show();
 
-        mostrarIntroHistoria(); // <-- RESTAURADA LA HISTORIA INICIAL
+        mostrarIntroHistoria();
     }
 
     private void cargarCSS() {
@@ -66,7 +67,6 @@ public class CyberMathApp extends Application {
         } catch (Exception e) {}
     }
 
-    // --- EFECTO MÁQUINA DE ESCRIBIR (RESTAURADO) ---
     private void escribirTextoAnimado(TextArea area, String texto, Runnable alTerminar) {
         area.clear();
         new Thread(() -> {
@@ -82,9 +82,8 @@ public class CyberMathApp extends Application {
         }).start();
     }
 
-    // --- PANTALLA DE HISTORIA INICIAL ---
     private void mostrarIntroHistoria() {
-        audio.playIntro(); // SONIDO BOOT
+        audio.playIntro();
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("root");
@@ -111,14 +110,13 @@ public class CyberMathApp extends Application {
 
         String historia = "AÑO 2088. LA RED GLOBAL 'THE HIVE' HA COLAPSADO.\n\n" +
                 "Corporaciones rivales han llenado el ciberespacio de malware, ransomware y trampas lógicas.\n\n" +
-                "Eres un Arquitecto de Sistemas Renegado. Tu misión es restaurar los nodos corruptos usando algoritmos matemáticos y lógica de programación.\n\n" +
+                "Eres un Arquitecto de Sistemas Renegado. Tu misión es restaurar los nodos corruptos usando algoritmos matemáticos.\n\n" +
                 "ADVERTENCIA: Si la integridad de tu conexión llega a 0%, tu perfil será purgado del servidor.\n\n" +
                 "Estableciendo conexión segura...";
 
         escribirTextoAnimado(txtHistoria, historia, () -> btnContinuar.setVisible(true));
     }
 
-    // --- SELECTOR DE PERFILES ---
     private void mostrarSelectorSlots() {
         VBox root = new VBox(30);
         root.setAlignment(Pos.CENTER);
@@ -129,12 +127,31 @@ public class CyberMathApp extends Application {
         panelSlots.setAlignment(Pos.CENTER);
 
         for (int i = 1; i <= 3; i++) {
-            Button btn = new Button("MEMORIA " + i);
+            final int slot = i;
+
+            Usuario tempUsuario = GestorArchivos.cargarUsuario(slot);
+            if (tempUsuario != null && tempUsuario.getIntegridad() <= 0) {
+                GestorArchivos.borrarUsuario(slot);
+                tempUsuario = null;
+            }
+
+            final Usuario usuarioGuardadoFinal = tempUsuario;
+
+            // Actualizado para mostrar Nodos Hackeados
+            String textoBtn = (usuarioGuardadoFinal != null) ? "MEMORIA " + slot + "\n[Nodos Hackeados: " + usuarioGuardadoFinal.getNivelesSuperados() + "]" : "MEMORIA " + slot + "\n[VACÍA]";
+
+            Button btn = new Button(textoBtn);
             btn.getStyleClass().add("button-hack");
-            btn.setPrefSize(150, 100);
-            int slot = i;
+            btn.setPrefSize(200, 100);
+
             btn.setOnAction(e -> {
-                jugador = new Usuario("HACKER_0" + slot);
+                this.slotActual = slot;
+                if (usuarioGuardadoFinal != null) {
+                    this.jugador = usuarioGuardadoFinal;
+                } else {
+                    this.jugador = new Usuario("HACKER_0" + slot);
+                    GestorArchivos.guardarUsuario(this.jugador, slotActual);
+                }
                 audio.playInfiltrado();
                 mostrarMapaArbol();
             });
@@ -144,7 +161,17 @@ public class CyberMathApp extends Application {
         escenaPrincipal.setRoot(root);
     }
 
-    // --- MAPA DE ÁRBOL Y TIENDA ---
+    // --- NUEVA LÓGICA DE DESBLOQUEO MULTIRAMA ---
+    private boolean isNodoDesbloqueado(int nivel) {
+        if (nivel == 1) return true; // El centro siempre activo
+        // Si es el inicio de cualquier rama secundaria, depende de vencer el nivel 1
+        if (nivel == 2 || nivel == 12 || nivel == 22 || nivel == 32 || nivel == 42) {
+            return jugador.isNivelCompletado(1);
+        }
+        // Para el resto de nodos en la rama, depende del nodo anterior
+        return jugador.isNivelCompletado(nivel - 1);
+    }
+
     private void mostrarMapaArbol() {
         Pane mapaCanvas = new Pane();
         mapaCanvas.getStyleClass().add("root");
@@ -200,14 +227,22 @@ public class CyberMathApp extends Application {
             Line cable = new Line(currentX, currentY, nextX, nextY);
             cable.setStroke(Color.web("#004444"));
             cable.setStrokeWidth(3);
-            if (i <= jugador.getNivelMaximo() + 1) {
+
+            // Revisa si el nodo PADRE está completado para encender el cable
+            boolean nodoPadreCompletado = (i == 2 || i == 12 || i == 22 || i == 32 || i == 42)
+                    ? jugador.isNivelCompletado(1)
+                    : jugador.isNivelCompletado(i - 1);
+
+            if (nodoPadreCompletado) {
                 cable.setStroke(neonColor);
                 cable.setOpacity(0.8);
                 cable.setEffect(new DropShadow(10, neonColor));
             }
             canvas.getChildren().add(0, cable);
-            boolean desbloqueado = (i <= jugador.getNivelMaximo());
+
+            boolean desbloqueado = isNodoDesbloqueado(i);
             crearNodoEstilizado(canvas, nextX, nextY, i, desbloqueado);
+
             currentX = nextX; currentY = nextY;
         }
     }
@@ -222,15 +257,27 @@ public class CyberMathApp extends Application {
         baseShape.setStroke(neonColor); baseShape.setStrokeWidth(2);
 
         if (desbloqueado) {
-            baseShape.setFill(Color.web("#002233"));
+            // Si el nivel ya fue superado, lo pintamos de verde hacker para distinguirlo
+            if(jugador.isNivelCompletado(nivel)) {
+                baseShape.setFill(Color.web("#004411"));
+                neonColor = Color.web("#00ff00");
+                baseShape.setStroke(neonColor);
+            } else {
+                baseShape.setFill(Color.web("#002233"));
+            }
+
             baseShape.setEffect(new DropShadow(15, neonColor));
             Label lblNum = new Label(String.valueOf(nivel));
             lblNum.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
 
             nodoStack.setCursor(Cursor.HAND);
             nodoStack.setOnMouseClicked(e -> mostrarBriefingMision(nivel));
-            nodoStack.setOnMouseEntered(e -> baseShape.setFill(neonColor.deriveColor(0, 1, 1, 0.3)));
-            nodoStack.setOnMouseExited(e -> baseShape.setFill(Color.web("#002233")));
+
+            final Color hoverColor = neonColor.deriveColor(0, 1, 1, 0.3);
+            final Color baseColor = (jugador.isNivelCompletado(nivel)) ? Color.web("#004411") : Color.web("#002233");
+
+            nodoStack.setOnMouseEntered(e -> baseShape.setFill(hoverColor));
+            nodoStack.setOnMouseExited(e -> baseShape.setFill(baseColor));
             nodoStack.getChildren().addAll(baseShape, lblNum);
         } else {
             baseShape.setFill(Color.BLACK); baseShape.setStroke(Color.GRAY); baseShape.setOpacity(0.4);
@@ -239,7 +286,6 @@ public class CyberMathApp extends Application {
         canvas.getChildren().add(nodoStack);
     }
 
-    // --- INTERFAZ DE TIENDA ---
     private void mostrarTienda() {
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
@@ -265,6 +311,7 @@ public class CyberMathApp extends Application {
                 String resultado = tienda.comprar(index, jugador);
                 if (resultado.contains("EXITOSA")) {
                     audio.playSuccess();
+                    GestorArchivos.guardarUsuario(jugador, slotActual);
                 } else {
                     audio.playError();
                 }
@@ -281,7 +328,6 @@ public class CyberMathApp extends Application {
         escenaPrincipal.setRoot(root);
     }
 
-    // --- BRIEFING ANIMADO (RESTAURADO) ---
     private void mostrarBriefingMision(int nivel) {
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
@@ -299,7 +345,7 @@ public class CyberMathApp extends Application {
 
         Button btnIniciar = new Button("EJECUTAR HACKEO");
         btnIniciar.getStyleClass().add("button-hack");
-        btnIniciar.setVisible(false); // Oculto hasta que termine la escritura
+        btnIniciar.setVisible(false);
         btnIniciar.setOnAction(e -> iniciarJuego(nivel));
 
         Button btnCancelar = new Button("CANCELAR");
@@ -316,7 +362,6 @@ public class CyberMathApp extends Application {
         escribirTextoAnimado(txtDetalles, descripcion, () -> btnIniciar.setVisible(true));
     }
 
-    // --- JUEGO PRINCIPAL ---
     private void iniciarJuego(int nivel) {
         this.nivelActualJugando = nivel;
         this.totalPreguntasActual = logica.getPreguntasPorNivel(nivel);
@@ -351,7 +396,13 @@ public class CyberMathApp extends Application {
         inputArea.getStyleClass().add("cyber-panel");
         inputArea.setAlignment(Pos.CENTER);
         txtRespuesta.setPromptText("CODE...");
-        btnHack.getStyleClass().add("button-hack");
+
+        txtRespuesta.setDisable(false);
+        btnHack.setDisable(false);
+        if (!btnHack.getStyleClass().contains("button-hack")) {
+            btnHack.getStyleClass().add("button-hack");
+        }
+
         btnHack.setPrefWidth(400); btnHack.setDefaultButton(true);
         btnHack.setOnAction(e -> verificarRespuesta());
         inputArea.getChildren().addAll(txtRespuesta, btnHack);
@@ -412,6 +463,7 @@ public class CyberMathApp extends Application {
                     timerAnimacion.stop();
                     jugador.sumarCriptos(100);
                     jugador.completarNivel(nivelActualJugando);
+                    GestorArchivos.guardarUsuario(jugador, slotActual);
                     txtLog.appendText("\n> [SUCCESS] NODO CAPTURADO. +100 BTC.");
                     actualizarHeader();
                     new Thread(() -> {
@@ -426,24 +478,25 @@ public class CyberMathApp extends Application {
         } catch (Exception e) { txtLog.appendText("\n> [ERROR] SINTAXIS."); audio.playError(); }
     }
 
-    // --- MANEJO DEL GAME OVER (RESTAURADO) ---
     private void procesarFallo(String motivo) {
         audio.playError();
         jugador.recibirDaño();
         txtLog.appendText("\n> [FAIL] " + motivo + ". DAÑO CRÍTICO.");
+        GestorArchivos.guardarUsuario(jugador, slotActual);
         actualizarHeader();
 
         if (jugador.getIntegridad() <= 0) {
             timerAnimacion.stop();
             lblReto.setText("SYSTEM FAILURE");
             txtRespuesta.setDisable(true); btnHack.setDisable(true);
-            txtLog.appendText("\n\n> INTEGRIDAD AL 0%. SISTEMA DESTRUIDO.\n> REINICIANDO CONEXIÓN AL NÚCLEO...");
+            txtLog.appendText("\n\n> INTEGRIDAD AL 0%. SISTEMA DESTRUIDO.\n> PERFIL PURGADO DEL SERVIDOR...");
+
+            GestorArchivos.borrarUsuario(slotActual);
 
             if (!rootJuego.getStyleClass().contains("alarma-roja")) {
                 rootJuego.getStyleClass().add("alarma-roja");
             }
 
-            // Redirige al menú principal después de 3.5 segundos
             new Thread(() -> {
                 try { Thread.sleep(3500); } catch(Exception ex){}
                 Platform.runLater(this::mostrarSelectorSlots);

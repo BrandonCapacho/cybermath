@@ -3,48 +3,45 @@ package com.cybermath;
 import java.io.Serializable;
 
 public class Usuario implements Serializable {
+    private static final long serialVersionUID = 2L; // Versión actualizada
+
     private String nombre;
     private int integridad;
     private int criptos;
-    private int nivelActual;
+    private boolean[] nivelesCompletados; // ¡Ahora rastrea múltiples ramas!
 
     public Usuario(String nombre) {
         this.nombre = nombre;
         this.integridad = 100;
         this.criptos = 0;
-        this.nivelActual = 1; // Inicia en el nivel 1
+        this.nivelesCompletados = new boolean[55]; // Capacidad para 50 niveles
     }
 
-    // --- MÉTODOS DE LA TIENDA ---
-    public void gastarCriptos(int cantidad) {
-        this.criptos -= cantidad;
-    }
+    public void gastarCriptos(int cantidad) { this.criptos -= cantidad; }
+    public void repararTotalmente() { this.integridad = 100; }
+    public void curar(int cantidad) { this.integridad = Math.min(100, this.integridad + cantidad); }
 
-    public void repararTotalmente() {
-        this.integridad = 100;
-    }
-
-    // ¡AQUÍ ESTÁ EL MÉTODO QUE FALTABA PARA CURAR EL 30%!
-    public void curar(int cantidad) {
-        this.integridad = Math.min(100, this.integridad + cantidad);
-    }
-
-    // --- GETTERS Y SETTERS GENERALES ---
     public String getNombre() { return nombre; }
     public int getIntegridad() { return integridad; }
     public void recibirDaño() { this.integridad -= 34; }
     public int getCriptos() { return criptos; }
     public void sumarCriptos(int cant) { this.criptos += cant; }
 
-    // --- MÉTODOS PARA AVANZAR EN EL MAPA ---
-    public int getNivelMaximo() {
-        return nivelActual;
+    // --- NUEVA LÓGICA DE MAPA ---
+    public boolean isNivelCompletado(int nivel) {
+        if (nivel < 0 || nivel >= nivelesCompletados.length) return false;
+        return nivelesCompletados[nivel];
     }
 
     public void completarNivel(int nivel) {
-        // Solo sube de nivel si completó el nivel más alto que tenía desbloqueado
-        if (nivel == this.nivelActual) {
-            this.nivelActual++;
+        if (nivel >= 0 && nivel < nivelesCompletados.length) {
+            this.nivelesCompletados[nivel] = true;
         }
+    }
+
+    public int getNivelesSuperados() {
+        int count = 0;
+        for (boolean b : nivelesCompletados) if(b) count++;
+        return count;
     }
 }
