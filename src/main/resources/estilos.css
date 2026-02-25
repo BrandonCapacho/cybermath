@@ -1,119 +1,266 @@
 /* =================================================================
-   TEMA CYBERPUNK - NEON TERMINAL v3.0
+   CYBERMATH: PROTOCOL ZERO — TEMA CYBERPUNK v4.0
+   Autores: Brandon Capacho & Daniel Perlaza — UDES
 ================================================================= */
 
-/* 1. FONDO GENERAL: Atmósfera oscura y profunda */
+/* ----------------------------------------------------------------
+   1. FONDO GLOBAL
+---------------------------------------------------------------- */
 .root {
-    /* Un degradado radial que va de gris muy oscuro a negro total */
-    -fx-background-color: radial-gradient(focus-angle 0deg, focus-distance 0%, center 50% 50%, radius 100%, #1a1a1a 0%, #000000 100%);
-    /* Fuente monoespaciada tipo hacker para TODO el juego */
+    -fx-background-color: radial-gradient(
+            focus-angle 0deg, focus-distance 0%,
+            center 50% 50%, radius 100%,
+            #0a1a0a 0%, #020a02 100%
+    );
     -fx-font-family: 'Consolas', 'Courier New', monospace;
-    -fx-padding: 30;
 }
 
-/* 2. PANELES ESTILO "CAJA FUERTE" (Contenedores) */
+/* ----------------------------------------------------------------
+   2. PANELES CONTENEDORES (cyber-panel)
+---------------------------------------------------------------- */
 .cyber-panel {
-    /* Fondo negro semi-transparente */
-    -fx-background-color: rgba(10, 15, 10, 0.85);
-    /* Borde verde neón delgado */
+    -fx-background-color: rgba(0, 18, 0, 0.90);
     -fx-border-color: #00ff41;
-    -fx-border-width: 1px;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-    /* EFECTO CLAVE: Resplandor verde exterior suave */
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 255, 65, 0.3), 20, 0, 0, 0);
-    -fx-padding: 20;
+    -fx-border-width: 1.5px;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 255, 65, 0.25), 18, 0, 0, 0);
+    -fx-padding: 18;
 }
 
-/* 3. TEXTOS GENERALES CON NEÓN (Etiquetas, Títulos) */
+.cyber-panel:hover {
+    -fx-border-color: #00ffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 255, 255, 0.30), 22, 0, 0, 0);
+}
+
+/* ----------------------------------------------------------------
+   3. ETIQUETAS GENERALES
+---------------------------------------------------------------- */
 .label {
-    -fx-text-fill: #00ff41; /* Color verde matrix */
+    -fx-text-fill: #00ff41;
     -fx-font-weight: bold;
     -fx-font-size: 14px;
-    /* EFECTO CLAVE: El texto emite luz propia (Glow) */
-    -fx-effect: dropshadow(gaussian, #00ff41, 8, 0.4, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 65, 0.6), 6, 0.3, 0, 0);
 }
 
-/* 4. EL RETO PRINCIPAL (Más grande y brillante) */
+/* ----------------------------------------------------------------
+   4. TÍTULO PRINCIPAL / RETO (#lblReto)
+---------------------------------------------------------------- */
 #lblReto {
-    -fx-font-size: 28px;
-    -fx-text-fill: #ffffff; /* Blanco núcleo para destacar */
+    -fx-font-size: 26px;
+    -fx-text-fill: #ffffff;
     -fx-font-weight: 900;
-    /* Doble brillo: halo blanco intenso + halo verde exterior */
-    -fx-effect: dropshadow(two-pass-box, #00ff41, 20, 0.5, 0, 0);
-    -fx-padding: 20 0;
+    -fx-effect: dropshadow(two-pass-box, #00ff41, 22, 0.5, 0, 0);
+    -fx-padding: 16 0;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
 }
 
-/* Títulos de los paneles (ej: "TERMINAL_OUTPUT") */
+/* ----------------------------------------------------------------
+   5. TÍTULOS DE PANELES
+---------------------------------------------------------------- */
 .panel-title {
-    -fx-text-fill: #00ff41;
+    -fx-text-fill: #00ffff;
     -fx-font-size: 12px;
-    -fx-opacity: 0.8;
-    -fx-padding: 0 0 10 0; /* Espacio abajo */
+    -fx-opacity: 0.85;
+    -fx-padding: 0 0 8 0;
+    -fx-letter-spacing: 2;
 }
 
-/* 5. CAMPO DE ESCRITURA (Input) */
+/* ----------------------------------------------------------------
+   6. CAMPO DE TEXTO (Input de respuesta)
+---------------------------------------------------------------- */
 .text-field {
-    -fx-background-color: transparent; /* Sin fondo */
-    -fx-text-fill: #ffffff; /* Texto blanco al escribir */
+    -fx-background-color: rgba(0, 8, 0, 0.9);
+    -fx-text-fill: #00ff41;
     -fx-border-color: #00ff41;
-    -fx-border-width: 0 0 3px 0; /* Solo una línea gruesa abajo */
-    -fx-font-size: 20px;
-    -fx-prompt-text-fill: #444; /* Color del texto de ayuda */
-}
-/* Cuando haces clic en el campo */
-.text-field:focused {
-    -fx-border-color: #ffffff; /* La línea se vuelve blanca */
-}
-
-/* 6. BOTÓN DE HACKEO (Estilo tecla física iluminada) */
-.button-hack {
-    -fx-background-color: #003300; /* Fondo verde muy oscuro */
-    -fx-text-fill: #00ff41; /* Texto verde luz */
-    -fx-border-color: #00ff41;
-    -fx-border-width: 2px;
-    -fx-font-weight: 900;
-    -fx-font-size: 15px;
-    -fx-cursor: hand;
+    -fx-border-width: 0 0 2.5px 0;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-prompt-text-fill: #224422;
+    -fx-alignment: center;
+    -fx-padding: 8 12;
     -fx-background-radius: 2;
 }
-/* Al pasar el mouse por encima */
-.button-hack:hover {
-    -fx-background-color: #00ff41; /* Se enciende por completo */
-    -fx-text-fill: #000000; /* Texto negro */
-    /* Brillo intenso exterior */
-    -fx-effect: dropshadow(three-pass-box, #00ff41, 30, 0.7, 0, 0);
+.text-field:focused {
+    -fx-border-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 65, 0.5), 12, 0.2, 0, 0);
+}
+.text-field:hover {
+    -fx-border-color: #00ffff;
 }
 
-/* 7. ARREGLO DE LA CONSOLA (TextArea) - ¡IMPORTANTE! */
-/* Esto fuerza a que el fondo blanco desaparezca */
-.text-area, .text-area .viewport, .text-area .content {
+/* ----------------------------------------------------------------
+   7. BOTÓN DE HACKEO
+---------------------------------------------------------------- */
+.button-hack {
+    -fx-background-color: linear-gradient(to bottom, #001800, #000d00);
+    -fx-text-fill: #00ff41;
+    -fx-border-color: #00ff41;
+    -fx-border-width: 1.5px;
+    -fx-font-weight: 900;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+    -fx-padding: 9 18;
+    -fx-letter-spacing: 1;
+}
+.button-hack:hover {
+    -fx-background-color: linear-gradient(to bottom, #003300, #001a00);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #00ffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 255, 65, 0.7), 28, 0.4, 0, 0);
+}
+.button-hack:pressed {
+    -fx-background-color: #004400;
+    -fx-scale-x: 0.97;
+    -fx-scale-y: 0.97;
+}
+.button-hack:disabled {
+    -fx-opacity: 0.35;
+    -fx-cursor: default;
+}
+
+/* ----------------------------------------------------------------
+   8. CONSOLA / LOG (TextArea)
+---------------------------------------------------------------- */
+.text-area,
+.text-area .viewport,
+.text-area .content {
     -fx-background-color: transparent !important;
     -fx-control-inner-background: transparent !important;
 }
-/* Estilo del texto del log */
 .text-area {
-    -fx-text-fill: #00ff41; /* Letras verdes */
-    -fx-font-size: 13px;
-    -fx-border-width: 0; /* Sin bordes propios */
-    -fx-highlight-fill: #00ff41; /* Color al seleccionar texto */
+    -fx-text-fill: #00ff41;
+    -fx-font-size: 12px;
+    -fx-border-width: 0;
+    -fx-highlight-fill: #00ff41;
     -fx-highlight-text-fill: black;
+    -fx-opacity: 0.9;
 }
-/* Ocultar las barras de desplazamiento feas */
-.text-area .scroll-bar { -fx-background-color: transparent; -fx-opacity: 0.5; }
-.text-area .scroll-bar .thumb { -fx-background-color: #333; }
-.nodo-nivel {
+.text-area .scroll-bar {
+    -fx-background-color: transparent;
+    -fx-opacity: 0.4;
+}
+.text-area .scroll-bar .thumb {
+    -fx-background-color: #224422;
+    -fx-background-radius: 2;
+}
+
+/* ----------------------------------------------------------------
+   9. BARRA DE PROGRESO (HP / Temporizador)
+---------------------------------------------------------------- */
+.progress-bar {
+    -fx-background-color: #0a0a0a;
+    -fx-background-radius: 3;
+    -fx-border-color: #224422;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3;
+}
+.progress-bar .bar {
+    -fx-background-radius: 2;
+    -fx-background-insets: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 65, 0.5), 6, 0.3, 0, 0);
+}
+.progress-bar .track {
+    -fx-background-color: #050505;
+    -fx-background-radius: 3;
+}
+
+/* ----------------------------------------------------------------
+   10. SEPARADORES
+---------------------------------------------------------------- */
+.separator .line {
+    -fx-border-color: #224422;
+    -fx-border-width: 1px 0 0 0;
+    -fx-opacity: 0.6;
+}
+
+/* ----------------------------------------------------------------
+   11. RADIO BUTTONS Y CHECKBOXES
+---------------------------------------------------------------- */
+.radio-button, .check-box {
+    -fx-text-fill: #00ff41;
+    -fx-font-family: 'Consolas';
+}
+.radio-button .radio,
+.check-box .box {
     -fx-background-color: #001100;
     -fx-border-color: #00ff41;
-    -fx-shape: "M 0 20 L 20 0 L 40 20 L 20 40 Z"; /* Forma de diamante/nodo */
+    -fx-border-width: 1.5px;
 }
-.nodo-bloqueado {
-    -fx-opacity: 0.3;
-    -fx-cursor: wait;
+.radio-button:selected .dot {
+    -fx-background-color: #00ff41;
 }
-/* ALARMA DE PELIGRO */
+.check-box:selected .mark {
+    -fx-background-color: #00ff41;
+}
+
+/* ----------------------------------------------------------------
+   12. SLIDER (Configuración)
+---------------------------------------------------------------- */
+.slider .track {
+    -fx-background-color: #001100;
+    -fx-border-color: #224422;
+    -fx-border-width: 1px;
+}
+.slider .thumb {
+    -fx-background-color: #003300;
+    -fx-border-color: #00ff41;
+    -fx-border-width: 2px;
+    -fx-background-radius: 50%;
+    -fx-border-radius: 50%;
+}
+.slider .thumb:hover {
+    -fx-background-color: #00ff41;
+}
+
+/* ----------------------------------------------------------------
+   13. SCROLL PANE (Mapa de nodos)
+---------------------------------------------------------------- */
+.scroll-pane {
+    -fx-background-color: #020a02;
+}
+.scroll-pane .viewport {
+    -fx-background-color: #020a02;
+}
+.scroll-pane .scroll-bar {
+    -fx-background-color: #050f05;
+    -fx-opacity: 0.6;
+}
+.scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #224422;
+    -fx-background-radius: 2;
+}
+
+/* ----------------------------------------------------------------
+   14. TOOLTIP
+---------------------------------------------------------------- */
+.tooltip {
+    -fx-background-color: #001100;
+    -fx-text-fill: #00ff41;
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 12px;
+    -fx-border-color: #00ff41;
+    -fx-border-width: 1px;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,65,0.4), 8, 0.2, 0, 0);
+}
+
+/* ----------------------------------------------------------------
+   15. ESTADO DE ALARMA (Permadeath inminente)
+---------------------------------------------------------------- */
 .alarma-roja {
-    -fx-background-color: radial-gradient(focus-angle 0deg, focus-distance 0%, center 50% 50%, radius 100%, #330000 0%, #000000 100%);
-    -fx-border-color: red;
-    -fx-border-width: 5px;
+    -fx-background-color: radial-gradient(
+            focus-angle 0deg, focus-distance 0%,
+            center 50% 50%, radius 100%,
+            #2a0000 0%, #050000 100%
+    );
+    -fx-border-color: #ff003c;
+    -fx-border-width: 3px;
+}
+.alarma-roja .label {
+    -fx-effect: dropshadow(gaussian, rgba(255, 0, 60, 0.8), 10, 0.4, 0, 0);
 }

@@ -1,47 +1,61 @@
 package com.cybermath;
 
-import java.io.Serializable;
+/**
+ * Modelo del jugador.
+ * Ya no implementa Serializable — la persistencia es gestionada por GestorDB (H2).
+ */
+public class Usuario {
 
-public class Usuario implements Serializable {
-    private static final long serialVersionUID = 2L; // Versión actualizada
-
-    private String nombre;
-    private int integridad;
-    private int criptos;
-    private boolean[] nivelesCompletados; // ¡Ahora rastrea múltiples ramas!
+    private String  nombre;
+    private int     integridad;
+    private int     criptos;
+    private boolean[] nivelesCompletados;
 
     public Usuario(String nombre) {
-        this.nombre = nombre;
-        this.integridad = 100;
-        this.criptos = 0;
-        this.nivelesCompletados = new boolean[55]; // Capacidad para 50 niveles
+        this.nombre             = nombre;
+        this.integridad         = 100;
+        this.criptos            = 0;
+        this.nivelesCompletados = new boolean[55]; // capacidad para 50 niveles + margen
     }
 
-    public void gastarCriptos(int cantidad) { this.criptos -= cantidad; }
-    public void repararTotalmente() { this.integridad = 100; }
-    public void curar(int cantidad) { this.integridad = Math.min(100, this.integridad + cantidad); }
+    // -------------------------------------------------------------------------
+    // Getters
+    // -------------------------------------------------------------------------
+    public String  getNombre()     { return nombre; }
+    public int     getIntegridad() { return integridad; }
+    public int     getCriptos()    { return criptos; }
 
-    public String getNombre() { return nombre; }
-    public int getIntegridad() { return integridad; }
-    public void recibirDaño() { this.integridad -= 34; }
-    public int getCriptos() { return criptos; }
-    public void sumarCriptos(int cant) { this.criptos += cant; }
+    // -------------------------------------------------------------------------
+    // Setters (necesarios para GestorDB al reconstruir desde la BD)
+    // -------------------------------------------------------------------------
+    public void setIntegridad(int v) { this.integridad = Math.max(0, Math.min(100, v)); }
+    public void setCriptos(int v)    { this.criptos    = Math.max(0, v); }
 
-    // --- NUEVA LÓGICA DE MAPA ---
+    // -------------------------------------------------------------------------
+    // Mecánicas de juego
+    // -------------------------------------------------------------------------
+    public void recibirDaño()              { this.integridad = Math.max(0, this.integridad - 34); }
+    public void curar(int cantidad)        { this.integridad = Math.min(100, this.integridad + cantidad); }
+    public void repararTotalmente()        { this.integridad = 100; }
+    public void sumarCriptos(int cant)     { this.criptos   += cant; }
+    public void gastarCriptos(int cant)    { this.criptos    = Math.max(0, this.criptos - cant); }
+
+    // -------------------------------------------------------------------------
+    // Progreso de niveles
+    // -------------------------------------------------------------------------
     public boolean isNivelCompletado(int nivel) {
         if (nivel < 0 || nivel >= nivelesCompletados.length) return false;
         return nivelesCompletados[nivel];
     }
 
     public void completarNivel(int nivel) {
-        if (nivel >= 0 && nivel < nivelesCompletados.length) {
-            this.nivelesCompletados[nivel] = true;
-        }
+        if (nivel >= 0 && nivel < nivelesCompletados.length)
+            nivelesCompletados[nivel] = true;
     }
 
     public int getNivelesSuperados() {
         int count = 0;
-        for (boolean b : nivelesCompletados) if(b) count++;
+        for (boolean b : nivelesCompletados) if (b) count++;
         return count;
     }
 }
