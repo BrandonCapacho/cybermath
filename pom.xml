@@ -23,7 +23,6 @@
 
     <dependencies>
 
-        <!-- ── JavaFX ── -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -40,10 +39,6 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <!-- ── H2 Database (embebida, sin servidor) ──
-             Reemplaza la serialización binaria de GestorArchivos.java.
-             Crea el archivo ~/CyberMathSaves/cybermath.mv.db automáticamente.
-        -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -55,7 +50,6 @@
     <build>
         <plugins>
 
-            <!-- Compilador -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -66,46 +60,20 @@
                 </configuration>
             </plugin>
 
-            <!-- JavaFX Maven Plugin (mvn javafx:run) -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.cybermath.Launcher</mainClass>
-                </configuration>
-            </plugin>
+                    <mainClass>com.cybermath.CyberMathApp</mainClass>
 
-            <!-- Empaquetado en fat-jar con todas las dependencias -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation=
-                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.cybermath.Launcher</mainClass>
-                                </transformer>
-                            </transformers>
-                            <!-- Evitar warnings de firma en JARs de JavaFX -->
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
+                    <launcher>CyberMath</launcher>
+                    <jlinkImageName>CyberMath_ProtocolZero</jlinkImageName>
+                    <jlinkZipName>CyberMath_Win64</jlinkZipName>
+                    <noManPages>true</noManPages>
+                    <stripDebug>true</stripDebug>
+                    <noHeaderFiles>true</noHeaderFiles>
+                </configuration>
             </plugin>
 
         </plugins>

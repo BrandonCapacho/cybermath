@@ -70,7 +70,7 @@ public class CyberMathApp extends Application {
     private Button      btnHack;
     private VBox        panelReto;
     private VBox        rootJuego;
-
+    private Timeline animacionMatrix;
     private Timeline timerAnimacion;
     private int      tiempoRestante;
     private int      TIEMPO_MAX          = 30;
@@ -208,10 +208,10 @@ public class CyberMathApp extends Application {
         Button btnSalir  = btnAncho("[ DESCONECTAR ]",       360);
 
         btnJugar.setStyle(btnJugar.getStyle() + "-fx-font-size:17px;-fx-padding:13 0;");
-        btnJugar.setOnAction(e  -> { audio.playInfiltrado(); mostrarIntroHistoria(); });
-        btnCargar.setOnAction(e -> { audio.playInfiltrado(); mostrarSelectorSlots(); });
-        btnConf.setOnAction(e   -> mostrarConfiguracion());
-        btnCred.setOnAction(e   -> mostrarCreditos());
+        btnJugar.setOnAction(e  -> { audio.playInfiltrado(); detenerAnimacionMatrix(); mostrarIntroHistoria(); });
+        btnCargar.setOnAction(e -> { audio.playInfiltrado(); detenerAnimacionMatrix(); mostrarSelectorSlots(); });
+        btnConf.setOnAction(e   -> { detenerAnimacionMatrix(); mostrarConfiguracion(); });
+        btnCred.setOnAction(e   -> { detenerAnimacionMatrix(); mostrarCreditos(); });
         btnSalir.setOnAction(e  -> ventana.close());
 
         Label lblSt = new Label("► SISTEMA ONLINE  |  NODOS DISPONIBLES: 50");
@@ -229,10 +229,16 @@ public class CyberMathApp extends Application {
     }
 
     private void animarFondoMatrix(Canvas canvas) {
+        // Si ya hay una animación corriendo, la detenemos para liberar la RAM
+        if (animacionMatrix != null) {
+            animacionMatrix.stop();
+        }
+
         GraphicsContext gc = canvas.getGraphicsContext2D();
         Random rand = new Random();
         String chars = "01アイウカ∫∑∂≠≈ABCDEF#@%";
-        Timeline tl = new Timeline(new KeyFrame(Duration.millis(55), e -> {
+
+        animacionMatrix = new Timeline(new KeyFrame(Duration.millis(55), e -> {
             double w = canvas.getWidth(), h = canvas.getHeight();
             gc.setFill(Color.rgb(2, 10, 2, 0.14));
             gc.fillRect(0, 0, w, h);
@@ -244,7 +250,15 @@ public class CyberMathApp extends Application {
                 gc.fillText(String.valueOf(c), i * 16, rand.nextDouble() * h);
             }
         }));
-        tl.setCycleCount(Timeline.INDEFINITE); tl.play();
+        animacionMatrix.setCycleCount(Timeline.INDEFINITE);
+        animacionMatrix.play();
+    }
+
+    // Método auxiliar para detener la animación desde los botones
+    private void detenerAnimacionMatrix() {
+        if (animacionMatrix != null) {
+            animacionMatrix.stop();
+        }
     }
 
     // =========================================================================
@@ -456,17 +470,26 @@ public class CyberMathApp extends Application {
                     estilo("[ VACÍA ]", 20, "#2a3a2a"),
                     estilo("Nueva partida", 12, "#3a5a3a"));
         } else {
-            ProgressBar pb = new ProgressBar(u.getIntegridad() / 100.0);
-            pb.setPrefWidth(160);
-            String ca = u.getIntegridad() > 50 ? C_VERDE : C_ROJO;
-            pb.setStyle("-fx-accent:" + ca + ";");
-            c.getChildren().addAll(lblSl,
-                    estilo(u.getNombre(),            16, "white"),
-                    pb,
-                    estilo("HP: "  + u.getIntegridad() + "%",  12, ca),
-                    estilo("Nodos: "+ u.getNivelesSuperados()+"/50", 12, C_CYAN),
-                    estilo("BTC: " + u.getCriptos(),  12, C_AMARILLO));
-        }
+        ProgressBar pb = new ProgressBar(u.getIntegridad() / 100.0);
+        pb.setPrefWidth(160);
+        String ca = u.getIntegridad() > 50 ? C_VERDE : C_ROJO;
+        pb.setStyle("-fx-accent:" + ca + ";");
+
+        // --- NUEVO: Obtener estadísticas de la BD ---
+        int[] stats = GestorDB.obtenerEstadisticas(slot);
+        int totalIntentos = stats[0];
+        int exitos = stats[1];
+        String eficiencia = (totalIntentos > 0) ? (exitos * 100 / totalIntentos) + "%" : "0%";
+        // --------------------------------------------
+
+        c.getChildren().addAll(lblSl,
+                estilo(u.getNombre(),            16, "white"),
+                pb,
+                estilo("HP: "  + u.getIntegridad() + "%",  12, ca),
+                estilo("Nodos: "+ u.getNivelesSuperados()+"/50", 12, C_CYAN),
+                estilo("Eficiencia: " + eficiencia, 12, C_MAGENTA), // <-- Mostrar eficiencia
+                estilo("BTC: " + u.getCriptos(),  12, C_AMARILLO));
+    }
         String estiloH = "-fx-background-color:rgba(0,35,0,0.92);-fx-border-color:" + C_CYAN +
                 ";-fx-border-width:2px;-fx-border-radius:5;-fx-background-radius:5;";
         c.setOnMouseEntered(e -> c.setStyle(estiloH));
@@ -491,6 +514,10 @@ public class CyberMathApp extends Application {
         return jugador.isNivelCompletado(nivel - 1);
     }
 
+    // =========================================================================
+    // MAPA DE NODOS — ÁRBOL VERTICAL CENTRADO Y RESPONSIVO
+    // =========================================================================
+
     private void mostrarMapaArbol() {
         BorderPane layout = new BorderPane();
         layout.setStyle("-fx-background-color:" + C_FONDO + ";");
@@ -511,13 +538,18 @@ public class CyberMathApp extends Application {
         Label lblEst = new Label(estadoJugador());
         lblEst.setStyle("-fx-text-fill:" + C_CYAN + ";-fx-font-size:13px;-fx-font-family:'Consolas';");
 
+        // --- AQUÍ AÑADIMOS EL BOTÓN DE REGISTRO ---
+        Button btnRegistro = btn("[ REGISTRO OP ]");
         Button btnTienda = btn("[ MERCADO NEGRO ]");
         Button btnSalir  = btn("[ CERRAR SESIÓN ]");
+
+        btnRegistro.setOnAction(e -> mostrarEstadisticas()); // Conexión al método
         btnTienda.setOnAction(e -> mostrarTienda());
         btnSalir.setOnAction(e  -> mostrarSelectorSlots());
-        topBar.getChildren().addAll(lblTit, sp, lblEst, btnTienda, btnSalir);
-        layout.setTop(topBar);
 
+        // Asegúrate de añadir btnRegistro al topBar
+        topBar.getChildren().addAll(lblTit, sp, lblEst, btnRegistro, btnTienda, btnSalir);
+        layout.setTop(topBar);
         // ── Leyenda inferior ──
         HBox leyenda = new HBox(24); leyenda.setAlignment(Pos.CENTER);
         leyenda.setPadding(new Insets(8));
@@ -528,7 +560,7 @@ public class CyberMathApp extends Application {
         }
         layout.setBottom(leyenda);
 
-        // ── Pane del mapa — se redibuia al cambiar tamaño ──
+        // ── Pane del mapa — se redibuja al cambiar tamaño ──
         Pane mapaPane = new Pane();
         mapaPane.setStyle("-fx-background-color:" + C_FONDO + ";");
 
@@ -545,6 +577,56 @@ public class CyberMathApp extends Application {
         escenaPrincipal.setRoot(layout);
         fadeIn(mapaPane, 400);
     }
+
+
+    // =========================================================================
+    // ESTADÍSTICAS DEL OPERADOR
+    // =========================================================================
+    private void mostrarEstadisticas() {
+        VBox root = new VBox(25);
+        root.setAlignment(Pos.CENTER);
+        root.getStyleClass().add("root");
+        root.setPadding(new Insets(40));
+
+        Label titulo = new Label("◈  REGISTRO DE OPERADOR");
+        titulo.setStyle("-fx-font-size:26px;-fx-font-weight:900;" +
+                "-fx-font-family:'Consolas';-fx-text-fill:" + C_CYAN + ";");
+        titulo.setEffect(new DropShadow(15, Color.web(C_CYAN)));
+
+        VBox panel = new VBox(15);
+        panel.setAlignment(Pos.CENTER);
+        panel.getStyleClass().add("cyber-panel");
+        panel.setMaxWidth(500);
+
+        // Obtener datos de la BD usando el GestorDB
+        int[] stats = GestorDB.obtenerEstadisticas(slotActual);
+        int total = stats[0];
+        int exitos = stats[1];
+        int fallos = stats[2];
+        double porc = total > 0 ? (double) exitos / total * 100 : 0;
+
+        panel.getChildren().addAll(
+                estilo("OPERADOR: " + jugador.getNombre(), 18, "white"),
+                new Separator(),
+                estilo("TOTAL DE HACKEOS INTENTADOS: " + total, 15, C_CYAN),
+                estilo("SECUENCIAS EXITOSAS: " + exitos, 15, C_VERDE),
+                estilo("FALLOS CRÍTICOS: " + fallos, 15, C_ROJO),
+                new Separator(),
+                estilo("TASA DE EFICIENCIA: " + String.format("%.1f", porc) + "%", 18, C_MAGENTA)
+        );
+
+        Button btnV = btnAncho("[ VOLVER AL MAPA ]", 300);
+        btnV.setOnAction(e -> mostrarMapaArbol());
+
+        root.getChildren().addAll(titulo, panel, btnV);
+        escenaPrincipal.setRoot(root);
+        fadeIn(root, 300);
+    }
+
+    // =========================================================================
+    // REGISTRO DE ESTADÍSTICAS DEL OPERADOR
+    // =========================================================================
+
 
     /**
      * Dibuja todo el árbol en el Pane, calculando posiciones a partir del
