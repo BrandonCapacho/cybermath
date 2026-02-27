@@ -264,3 +264,62 @@
 .alarma-roja .label {
     -fx-effect: dropshadow(gaussian, rgba(255, 0, 60, 0.8), 10, 0.4, 0, 0);
 }
+/* PROTOCOLO VISUAL: THE_HIVE_MAP
+   Define la estética del Árbol de Nodos y ScrollPane
+*/
+
+/* Contenedor principal del Mapa */
+.map-root {
+    -fx-background-color: #000000; /* Fondo negro absoluto */
+    /* Evitamos efectos globales aquí para no rasterizar textos de los nodos */
+}
+
+/* Estilo para el ScrollPane que contiene el mapa */
+.map-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent; /* Importante para H2 Database */
+    -fx-border-color: #00FF00; /* Borde verde neón */
+    -fx-border-width: 1px;
+}
+
+/* Ocultar barras de scroll para mayor inmersión, o estilizarlas */
+.map-scroll-pane .scroll-bar:horizontal,
+.map-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: #051105;
+}
+.map-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #00FF00;
+    -fx-background-radius: 0;
+}
+
+/* Estilo base para los Nodos (Círculos/Hexágonos) */
+.node-circle {
+    -fx-stroke: #00FFFF; /* Cian por defecto */
+    -fx-stroke-width: 2px;
+    -fx-fill: #051105; /* Negro verdoso */
+}
+
+.node-circle:hover {
+    -fx-stroke: #FF00FF; /* Magenta al pasar el mouse */
+    -fx-effect: dropshadow(three-pass-box, #FF00FF, 10, 0, 0, 0); /* Glow directo al círculo */
+}
+
+/* Nodos Completados */
+.node-completed {
+    -fx-stroke: #00FF00; /* Verde neón */
+    -fx-fill: #002200;
+}
+
+/* Nodos Bloqueados */
+.node-locked {
+    -fx-stroke: #333333; /* Gris oscuro */
+    -fx-fill: #111111;
+}
+/* --- FORZAR TRANSPARENCIA DEL MAPA PARA VER LA MATRIX --- */
+.mapa-transparente {
+    -fx-background-color: transparent !important;
+    -fx-background: transparent !important;
+}
+.mapa-transparente .viewport {
+    -fx-background-color: transparent !important;
+}

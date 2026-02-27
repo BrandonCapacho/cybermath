@@ -167,4 +167,21 @@ public class LogicaJuego {
             return prefix + "MITIGAR BOTNET:\nResolver ∫ [" + b + " a " + c + "] (" + a + "x) dx";
         }
     }
+    // =========================================================================
+    // MODO SUPERVIVENCIA: DEEP WEB
+    // =========================================================================
+    public String generarRetoDeepWeb(int oleada) {
+        this.categoriaActual = "DEEP WEB — OLEADA " + oleada;
+        String prefix = "[DEEP WEB] (Oleada " + oleada + ")\n>>> ";
+
+        // Aumenta la dificultad base según la oleada
+        int dificultadVirtual = Math.min(50, 5 + (oleada * 2));
+
+        int tipo = rand.nextInt(5);
+        if (tipo == 0) return generarPhishing(prefix, dificultadVirtual);
+        if (tipo == 1) return generarFirewall(prefix);
+        if (tipo == 2) return generarCriptografia(prefix);
+        if (tipo == 3) return generarSQLInjection(prefix);
+        return generarDDoS(prefix);
+    }
 }
