@@ -535,25 +535,46 @@ public class CyberMathApp extends Application {
         topBar.setPadding(new Insets(10, 20, 10, 20));
         topBar.setStyle("-fx-background-color:rgba(0,18,0,0.96);-fx-border-color:" + C_VERDE + ";-fx-border-width:0 0 2px 0;");
 
-        Label lblTit = new Label("◈  SISTEMA CENTRAL — MAPA DE NODOS");
+        Label lblTit = new Label("◈  SISTEMA CENTRAL");
         lblTit.setStyle("-fx-text-fill:" + C_VERDE + ";-fx-font-size:17px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
         lblTit.setEffect(new DropShadow(10, Color.web(C_VERDE)));
+
+        // --- REPRODUCTOR TÁCTICO BGM ---
+        ComboBox<String> comboM = new ComboBox<>();
+        comboM.setStyle("-fx-background-color:#001100;-fx-text-fill:#00ff41;-fx-border-color:#00ff41;");
+        comboM.getItems().add("[ SILENCIO ]");
+        if (jugador.isPistaDesbloqueada(1)) comboM.getItems().add("► SYNTHWAVE OVERDRIVE");
+        if (jugador.isPistaDesbloqueada(2)) comboM.getItems().add("► DARK ELECTRO VOID");
+        comboM.getSelectionModel().select(0);
+        comboM.setOnAction(e -> {
+            int sel = comboM.getSelectionModel().getSelectedIndex();
+            if (sel == 0) audio.detenerBGM();
+            else audio.reproducirBGM(sel);
+        });
 
         Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
         Label lblEst = new Label(estadoJugador());
         lblEst.setStyle("-fx-text-fill:" + C_CYAN + ";-fx-font-size:13px;-fx-font-family:'Consolas';");
 
-        Button btnBoveda   = btn("[ BÓVEDA DE DATOS ]");
-        Button btnRegistro = btn("[ REGISTRO OP ]");
-        Button btnTienda   = btn("[ MERCADO NEGRO ]");
-        Button btnSalir    = btn("[ CERRAR SESIÓN ]");
+        Button btnDeepWeb  = btn("[ DEEP WEB ]"); btnDeepWeb.setStyle(btnDeepWeb.getStyle() + "-fx-text-fill:" + C_ROJO + ";-fx-border-color:" + C_ROJO + ";");
+        Button btnBoveda   = btn("[ BÓVEDA ]");
+        Button btnRegistro = btn("[ REGISTRO ]");
+        Button btnTienda   = btn("[ MERCADO ]");
+        Button btnSalir    = btn("[ SALIR ]");
 
+        btnDeepWeb.setOnAction(e -> iniciarDeepWeb(1)); // Comienza en la oleada 1
         btnBoveda.setOnAction(e -> mostrarBovedaDatos());
         btnRegistro.setOnAction(e -> mostrarEstadisticas());
         btnTienda.setOnAction(e -> mostrarTienda());
-        btnSalir.setOnAction(e  -> { if(mineriaTimeline != null) mineriaTimeline.stop(); mostrarSelectorSlots(); });
+        btnSalir.setOnAction(e  -> { if(mineriaTimeline != null) mineriaTimeline.stop(); audio.detenerBGM(); mostrarSelectorSlots(); });
 
-        topBar.getChildren().addAll(lblTit, sp, lblEst, btnBoveda, btnRegistro, btnTienda, btnSalir);
+        // Solo mostrar Deep Web si el jugador terminó el nivel 50 (o si está en God Mode)
+        if (jugador.isNivelCompletado(50)) {
+            topBar.getChildren().addAll(lblTit, comboM, sp, lblEst, btnDeepWeb, btnBoveda, btnRegistro, btnTienda, btnSalir);
+        } else {
+            topBar.getChildren().addAll(lblTit, comboM, sp, lblEst, btnBoveda, btnRegistro, btnTienda, btnSalir);
+        }
+
         layout.setTop(topBar);
 
         HBox leyenda = new HBox(24); leyenda.setAlignment(Pos.CENTER);
@@ -678,9 +699,156 @@ public class CyberMathApp extends Application {
                 yPrev = yNodo;
             }
         }
+        // --- INYECCIÓN DE EVENTOS DINÁMICOS EN EL MAPA ---
+        Random r = new Random();
+
+        // 1. TRAMPA HONEYPOT (15% de probabilidad de aparecer un nodo dorado)
+        if (r.nextInt(100) < 15) {
+            double hx = anchoTotal * (0.2 + r.nextDouble() * 0.6);
+            double hy = yPrimerNodo + r.nextDouble() * (SEP_V * 8);
+            dibujarNodoHex(pane, hx, hy, 999, NODO_R + 5, true, C_AMARILLO, "HONEYPOT");
+        }
+
+        // 2. OPERADORES ALIADOS EN PELIGRO (25% de probabilidad)
+        if (r.nextInt(100) < 25) {
+            String[] aliados = {"JUAN ANGEL", "KALETH", "VALENTINA", "DOUGLAS"};
+            String aliadoActivo = aliados[r.nextInt(aliados.length)];
+
+            double ax = anchoTotal * (0.1 + r.nextDouble() * 0.8);
+            double ay = yPrimerNodo + r.nextDouble() * (SEP_V * 9);
+
+            Polygon hexAliado = hexagono(NODO_R);
+            hexAliado.setLayoutX(ax); hexAliado.setLayoutY(ay);
+            hexAliado.setFill(Color.web("#002244"));
+            hexAliado.setStroke(Color.web("#0088ff")); hexAliado.setStrokeWidth(2);
+
+            Label lblSOS = new Label("SOS");
+            lblSOS.setStyle("-fx-text-fill:#0088ff;-fx-font-size:10px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+
+            StackPane stackAliado = new StackPane(hexAliado, lblSOS);
+            stackAliado.setLayoutX(ax - NODO_R); stackAliado.setLayoutY(ay - NODO_R);
+            stackAliado.setCursor(Cursor.HAND);
+
+            Tooltip t = new Tooltip("SEÑAL DE AUXILIO: Operador " + aliadoActivo + " interceptado.\n► Clic para asistir");
+            t.setStyle("-fx-background-color:#001100;-fx-text-fill:#0088ff;");
+            Tooltip.install(stackAliado, t);
+
+            stackAliado.setOnMouseClicked(e -> iniciarRescateAliado(aliadoActivo));
+
+            // Animación de pulso
+            FadeTransition ft = new FadeTransition(Duration.millis(800), stackAliado);
+            ft.setFromValue(0.4); ft.setToValue(1.0); ft.setCycleCount(Animation.INDEFINITE); ft.setAutoReverse(true); ft.play();
+
+            pane.getChildren().add(stackAliado);
+        }
         pane.setPrefSize(anchoTotal, yPrimerNodo + SEP_V * 11 + 80);
     }
+// =========================================================================
+    // MODOS DE EXPANSIÓN (FASE 2)
+    // =========================================================================
 
+    private void iniciarDeepWeb(int oleada) {
+        if (jugador.getIntegridad() <= 0) {
+            mostrarMapaArbol(); return;
+        }
+
+        nivelActualJugando = 1000 + oleada; // ID ficticio para no afectar el historial normal
+        totalPreguntasActual = 1;
+        preguntasPendientes = 1;
+
+        panelReto = new VBox(8); panelReto.setAlignment(Pos.CENTER);
+        txtRespuesta = new TextField(); txtRespuesta.setAlignment(Pos.CENTER); txtRespuesta.setMaxWidth(400);
+        btnHack = btnAncho("[ INYECTAR ]", 420);
+        txtLog = new TextArea(); txtLog.setPrefHeight(100); txtLog.setEditable(false);
+
+        String retoTexto = logica.generarRetoDeepWeb(oleada);
+        panelReto.getChildren().add(construirVistaReto(retoTexto));
+
+        lblHeader = new Label("DEEP WEB — OLEADA: " + oleada + "  |  RÉCORD: " + jugador.getDeepWebScore());
+        lblHeader.setStyle("-fx-text-fill:" + C_ROJO + ";-fx-font-size:16px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+        lblTimer = new Label();
+        barraTiempo = new ProgressBar(1.0); barraTiempo.setPrefWidth(300); barraTiempo.setStyle("-fx-accent:" + C_ROJO + ";");
+
+        HBox top = new HBox(20, lblHeader, barraTiempo, lblTimer); top.setAlignment(Pos.CENTER); top.getStyleClass().add("cyber-panel");
+        VBox root = new VBox(20, top, panelReto, txtRespuesta, btnHack, txtLog);
+        root.setAlignment(Pos.CENTER); root.getStyleClass().add("root"); root.setPadding(new Insets(30));
+
+        btnHack.setOnAction(e -> {
+            try {
+                if (logica.verificar(Double.parseDouble(txtRespuesta.getText().trim()))) {
+                    audio.playSuccess();
+                    jugador.setDeepWebScore(oleada); // Actualiza récord
+                    jugador.sumarCriptos(15); // Recompensa pequeña por oleada
+                    GestorDB.guardarUsuario(jugador, slotActual);
+                    if(timerAnimacion != null) timerAnimacion.stop();
+                    iniciarDeepWeb(oleada + 1); // Siguiente oleada procedural
+                } else {
+                    audio.playError(); jugador.recibirDaño();
+                    txtLog.appendText("[FATAL] ICE DETECTADO. -34% HP.\n");
+                    if(jugador.getIntegridad() <= 0) procesarFallo("DEEP WEB PURGE");
+                }
+            } catch (Exception ex) {}
+        });
+
+        aplicarEfectoTema(root); escenaPrincipal.setRoot(root);
+
+        // Temporizador ultra rápido y agresivo
+        TIEMPO_MAX = Math.max(5, 15 - (oleada / 3)); // Se reduce el tiempo a medida que avanzas
+        iniciarTemporizador();
+    }
+
+    private void iniciarRescateAliado(String aliado) {
+        if(timerAnimacion != null) timerAnimacion.stop();
+        VBox root = new VBox(20); root.setAlignment(Pos.CENTER); root.getStyleClass().add("root");
+
+        Label lblTit = estilo("◈ CONEXIÓN INTERCEPTADA: " + aliado, 20, "#0088ff");
+        Label lblDesc = estilo("El operador está bajo ataque de rastreo. Requiere desencriptación Hexadecimal manual inmediata.", 14, "white");
+
+        // Generar un byte hexadecimal aleatorio (00 a FF)
+        int valorDecimal = new Random().nextInt(256);
+        String valorHex = Integer.toHexString(valorDecimal).toUpperCase();
+        if (valorHex.length() == 1) valorHex = "0" + valorHex;
+
+        VBox reto = new VBox(10); reto.setAlignment(Pos.CENTER); reto.getStyleClass().add("cyber-panel");
+        reto.getChildren().addAll(
+                estilo("DECODIFICAR DIRECCIÓN MAC", 12, C_CYAN),
+                estilo("[ " + valorHex + " ]", 36, C_AMARILLO),
+                estilo("Traducción a Decimal (0 - 255):", 12, "white")
+        );
+
+        TextField txtHex = new TextField(); txtHex.setMaxWidth(200); txtHex.setAlignment(Pos.CENTER);
+        Button btnHex = btnAncho("[ DECODIFICAR ]", 200);
+
+        Label timerRescate = estilo("10s", 24, C_ROJO);
+
+        root.getChildren().addAll(lblTit, lblDesc, reto, txtHex, btnHex, timerRescate);
+        aplicarEfectoTema(root); escenaPrincipal.setRoot(root);
+
+        // Temporizador de 10 segundos
+        final int[] t = {10};
+        Timeline timeHex = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            t[0]--; timerRescate.setText(t[0] + "s");
+            if (t[0] <= 0) {
+                audio.playError();
+                pausar(1000, this::mostrarMapaArbol); // Falla el rescate, vuelve al mapa
+            }
+        }));
+        timeHex.setCycleCount(10); timeHex.play();
+
+        btnHex.setOnAction(e -> {
+            try {
+                if (Integer.parseInt(txtHex.getText().trim()) == valorDecimal) {
+                    timeHex.stop(); audio.playSuccess();
+                    jugador.sumarCriptos(250); // Gran recompensa por ayudar a un aliado
+                    GestorDB.guardarUsuario(jugador, slotActual);
+                    lblTit.setText("¡OPERADOR " + aliado + " SALVADO!");
+                    pausar(2000, this::mostrarMapaArbol);
+                } else {
+                    audio.playError();
+                }
+            } catch (Exception ex) {}
+        });
+    }
     private void dibujarLinea(Pane pane, double x1, double y1, double x2, double y2, String color, boolean activo) {
         Line l = new Line(x1, y1, x2, y2);
         l.setStroke(Color.web(color)); l.setStrokeWidth(activo ? 2.2 : 1.2); l.setOpacity(activo ? 0.75 : 0.25);
