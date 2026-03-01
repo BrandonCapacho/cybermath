@@ -10,7 +10,8 @@ public class Usuario {
     private int energia;
     private int minerosBTC;
     private int bonusTiempo;
-    private String temaUI;
+    private String  temaUI;
+    private boolean[] temasDesbloqueados; // [0]=NEON siempre, [1]=AMBAR, [2]=AZUL
     private boolean[] loreDesbloqueado;
 
     // --- NUEVO: DEEP WEB Y MÚSICA ---
@@ -25,6 +26,7 @@ public class Usuario {
         this.minerosBTC         = 0;
         this.bonusTiempo        = 0;
         this.temaUI             = "NEON";
+        this.temasDesbloqueados = new boolean[]{true, false, false}; // NEON siempre desbloqueado
         this.nivelesCompletados = new boolean[55];
         this.loreDesbloqueado   = new boolean[5];
 
@@ -47,7 +49,19 @@ public class Usuario {
     public void setEnergia(int v)    { this.energia    = Math.max(0, Math.min(100, v)); }
     public void setMineros(int v)    { this.minerosBTC = Math.max(0, v); }
     public void setBonusTiempo(int v){ this.bonusTiempo = Math.max(0, v); }
-    public void setTemaUI(String t)  { this.temaUI     = t; }
+    public void setTemaUI(String t)  { this.temaUI = t; }
+
+    public boolean isTemaDesbloqueado(String tema) {
+        switch (tema) {
+            case "AMBAR": return temasDesbloqueados[1];
+            case "AZUL":  return temasDesbloqueados[2];
+            default:      return true; // NEON siempre disponible
+        }
+    }
+    public void desbloquearTema(String tema) {
+        if (tema.equals("AMBAR")) temasDesbloqueados[1] = true;
+        if (tema.equals("AZUL"))  temasDesbloqueados[2] = true;
+    }
     public void setDeepWebScore(int v){ this.deepWebScore = Math.max(this.deepWebScore, v); } // Guarda solo el récord máximo
 
     public void recibirDaño()              { this.integridad = Math.max(0, this.integridad - 34); }
@@ -98,6 +112,7 @@ public class Usuario {
         this.bonusTiempo = 60;
         for (int i = 0; i <= 50; i++) this.nivelesCompletados[i] = true;
         for (int i = 0; i < 5; i++) this.loreDesbloqueado[i] = true;
+        for (int i = 0; i < 3; i++) this.temasDesbloqueados[i] = true;
         for (int i = 0; i < 3; i++) this.pistasDesbloqueadas[i] = true;
     }
 }

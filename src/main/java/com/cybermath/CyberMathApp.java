@@ -626,12 +626,14 @@ public class CyberMathApp extends Application {
             else audio.reproducirBGM(sel);
         });
 
-        // Tema UI — FIX: usa getTemaUI() no isPistaDesbloqueada()
+        // Tema UI — solo muestra temas comprados en la tienda
         ComboBox<String> comboTema = new ComboBox<>();
         comboTema.setStyle("-fx-background-color:#001500;-fx-text-fill:" + C_VERDE +
                 ";-fx-border-color:#224422;-fx-font-family:'Consolas';-fx-font-size:11px;");
         comboTema.setPrefWidth(115);
-        comboTema.getItems().addAll("UI:NEON", "UI:ÁMBAR", "UI:CIAN");
+        comboTema.getItems().add("UI:NEON");
+        if (jugador.isTemaDesbloqueado("AMBAR")) comboTema.getItems().add("UI:ÁMBAR");
+        if (jugador.isTemaDesbloqueado("AZUL"))  comboTema.getItems().add("UI:CIAN");
         switch (jugador.getTemaUI()) {
             case "AMBAR": comboTema.getSelectionModel().select("UI:ÁMBAR"); break;
             case "AZUL":  comboTema.getSelectionModel().select("UI:CIAN");  break;
