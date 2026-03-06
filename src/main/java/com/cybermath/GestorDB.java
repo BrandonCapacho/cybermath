@@ -65,12 +65,13 @@ public class GestorDB {
             stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS lore_desbloqueado VARCHAR(50) NOT NULL DEFAULT ''");
             stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS deep_web_score INTEGER NOT NULL DEFAULT 0");
             stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS pistas_musica VARCHAR(50) NOT NULL DEFAULT '0'");
-            stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS temas_desbloqueados VARCHAR(20) NOT NULL DEFAULT 'NEON'");
+            stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS temas_desbloqueados VARCHAR(30) NOT NULL DEFAULT 'NEON'");
+            stmt.execute("ALTER TABLE partidas ADD COLUMN IF NOT EXISTS niveles_castigados VARCHAR(200) NOT NULL DEFAULT ''");
         }
     }
 
     public static void guardarUsuario(Usuario u, int slot) {
-        String sql = "MERGE INTO partidas (slot, nombre, integridad, criptos, energia, mineros, bonus_tiempo, niveles_completados, tema_ui, lore_desbloqueado, deep_web_score, pistas_musica, temas_desbloqueados) KEY(slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "MERGE INTO partidas (slot, nombre, integridad, criptos, energia, mineros, bonus_tiempo, niveles_completados, tema_ui, lore_desbloqueado, deep_web_score, pistas_musica, temas_desbloqueados, niveles_castigados) KEY(slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setInt(1, slot); ps.setString(2, u.getNombre()); ps.setInt(3, u.getIntegridad());
             ps.setInt(4, u.getCriptos()); ps.setInt(5, u.getEnergia()); ps.setInt(6, u.getMineros());
@@ -87,11 +88,14 @@ public class GestorDB {
             for(int i=0; i<3; i++) if(u.isPistaDesbloqueada(i)) pistasStr.append(i).append(",");
             ps.setString(12, pistasStr.toString());
 
-            // Temas desbloqueados
             StringBuilder temasStr = new StringBuilder("NEON");
             if (u.isTemaDesbloqueado("AMBAR")) temasStr.append(",AMBAR");
             if (u.isTemaDesbloqueado("AZUL"))  temasStr.append(",AZUL");
             ps.setString(13, temasStr.toString());
+
+            StringBuilder castigosStr = new StringBuilder();
+            for (int n : u.getNivelesCastigados()) castigosStr.append(n).append(",");
+            ps.setString(14, castigosStr.toString());
 
             ps.executeUpdate();
         } catch (SQLException e) { System.err.println("[DB ERROR] guardarUsuario: " + e.getMessage()); }
@@ -116,11 +120,18 @@ public class GestorDB {
                 String pistasStr = rs.getString("pistas_musica");
                 if (pistasStr != null) for (String p : pistasStr.split(",")) if(!p.isBlank()) u.desbloquearPista(Integer.parseInt(p.trim()));
 
-                // Cargar temas desbloqueados
                 String temasStr = rs.getString("temas_desbloqueados");
                 if (temasStr != null) {
                     if (temasStr.contains("AMBAR")) u.desbloquearTema("AMBAR");
                     if (temasStr.contains("AZUL"))  u.desbloquearTema("AZUL");
+                }
+
+                String castigosStr = rs.getString("niveles_castigados");
+                if (castigosStr != null && !castigosStr.isBlank()) {
+                    java.util.List<Integer> castigos = new java.util.ArrayList<>();
+                    for (String p : castigosStr.split(","))
+                        if (!p.isBlank()) castigos.add(Integer.parseInt(p.trim()));
+                    u.setNivelesCastigados(castigos);
                 }
 
                 return u;

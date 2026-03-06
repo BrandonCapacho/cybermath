@@ -393,27 +393,35 @@ public class CyberMathApp extends Application {
 
     private void mostrarIntroHistoria() {
         audio.playIntro();
-        VBox root = new VBox(20); root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("root"); root.setPadding(new Insets(50));
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color:" + C_FONDO + ";");
+        Canvas fondo = crearCanvasMatrix();
 
-        Label lbl = new Label(":: INICIALIZANDO KERNEL ::"); lbl.setId("lblReto");
+        VBox panel = new VBox(24); panel.setAlignment(Pos.CENTER);
+        panel.setMaxWidth(860); panel.setPadding(new Insets(50));
+
+        Label lbl = new Label(":: INICIALIZANDO KERNEL ::");
+        lbl.setStyle("-fx-font-size:26px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + C_VERDE + ";");
+        lbl.setEffect(new DropShadow(18, Color.web(C_VERDE)));
 
         TextArea txt = new TextArea();
         txt.setWrapText(true); txt.setEditable(false);
-        txt.getStyleClass().add("text-area"); txt.setStyle("-fx-font-size:16px;");
+        txt.getStyleClass().add("text-area"); txt.setStyle("-fx-font-size:15px;");
         txt.setPrefHeight(310); txt.setMaxWidth(820);
 
         Button btnSkip = btn("[ SKIP ]");
-        btnSkip.setStyle(btnSkip.getStyle() + "-fx-opacity:0.55;-fx-font-size:12px;");
+        btnSkip.setStyle(btnSkip.getStyle() + "-fx-opacity:0.65;-fx-font-size:12px;");
         Button btnSig = btnAncho("[ CONECTAR AL SISTEMA >> ]", 370);
         btnSig.setVisible(false);
-        btnSkip.setOnAction(e -> mostrarSelectorSlots());
-        btnSig.setOnAction(e  -> mostrarSelectorSlots());
+        btnSkip.setOnAction(e -> { detenerAnimacionMatrix(); mostrarSelectorSlots(); });
+        btnSig.setOnAction(e  -> { detenerAnimacionMatrix(); mostrarSelectorSlots(); });
 
         HBox bots = new HBox(20, btnSkip, btnSig); bots.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(lbl, txt, bots);
+        panel.getChildren().addAll(lbl, txt, bots);
+        root.getChildren().addAll(fondo, panel);
         aplicarEfectoTema(root);
         escenaPrincipal.setRoot(root);
+        fadeIn(panel, 400);
 
         String historia = "AÑO 2088. LA RED GLOBAL 'THE HIVE' HA COLAPSADO.\n\n" +
                 "Corporaciones rivales han llenado el ciberespacio de malware.\n" +
@@ -424,42 +432,121 @@ public class CyberMathApp extends Application {
     }
 
     // =========================================================================
-    // SELECTOR DE SLOTS
+    // SELECTOR DE SLOTS / MEMORIAS DEL SISTEMA
     // =========================================================================
 
-    private void mostrarSelectorSlots() {
-        VBox root = new VBox(28); root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("root"); root.setPadding(new Insets(40));
+    private void mostrarSelectorSlots() { mostrarMemoriasSlots(); }
 
-        Label titulo = new Label(":: SELECCIONE PERFIL DE OPERADOR ::"); titulo.setId("lblReto");
+    private void mostrarMemoriasSlots() {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color:" + C_FONDO + ";");
+        Canvas fondo = crearCanvasMatrix();
 
-        HBox slots = new HBox(24); slots.setAlignment(Pos.CENTER);
+        VBox panel = new VBox(28); panel.setAlignment(Pos.CENTER);
+        panel.setPadding(new Insets(40));
+
+        Label lblTit = new Label("// MEMORIAS DEL SISTEMA //");
+        lblTit.setStyle("-fx-font-size:30px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + C_VERDE + ";");
+        lblTit.setEffect(new DropShadow(22, Color.web(C_VERDE)));
+        Label lblSub = new Label("SELECCIONA O CREA UN PERFIL DE OPERADOR");
+        lblSub.setStyle("-fx-text-fill:#3a5a3a;-fx-font-size:12px;-fx-font-family:'Consolas';");
+
+        HBox slots = new HBox(28); slots.setAlignment(Pos.CENTER);
         for (int i = 1; i <= 3; i++) {
             final int slot = i;
             Usuario tmp = GestorDB.cargarUsuario(slot);
             if (tmp != null && tmp.getIntegridad() <= 0) { GestorDB.borrarUsuario(slot); tmp = null; }
             final Usuario guardado = tmp;
-            VBox tarjeta = tarjetaSlot(slot, guardado);
-
-            tarjeta.setOnMouseClicked(e -> {
+            VBox card = tarjetaMemoria(slot, guardado);
+            card.setOnMouseClicked(e -> {
                 slotActual = slot;
                 if (guardado != null) {
-                    jugador = guardado;
-                    audio.playInfiltrado();
-                    mostrarMapaArbol();
+                    jugador = guardado; audio.playInfiltrado();
+                    detenerAnimacionMatrix(); mostrarMapaArbol();
                 } else {
                     audio.playInfiltrado();
-                    mostrarCreacionPerfil(slot);
+                    detenerAnimacionMatrix(); mostrarCreacionPerfil(slot);
                 }
             });
-            slots.getChildren().add(tarjeta);
+            slots.getChildren().add(card);
         }
 
-        Button btnV = btn("[ VOLVER AL MENÚ ]");
-        btnV.setOnAction(e -> mostrarMenuPrincipal());
-        root.getChildren().addAll(titulo, slots, btnV);
-        aplicarEfectoTema(root);
-        escenaPrincipal.setRoot(root); fadeIn(slots, 400);
+        Button btnMenu = new Button("[ MENÚ PRINCIPAL ]");
+        btnMenu.setStyle("-fx-background-color:transparent;-fx-text-fill:#3a5a3a;" +
+                "-fx-border-color:#224422;-fx-border-width:1px;-fx-border-radius:3;" +
+                "-fx-font-family:'Consolas';-fx-font-size:12px;-fx-padding:6 20;-fx-cursor:hand;");
+        btnMenu.setOnAction(e -> { detenerAnimacionMatrix(); mostrarMenuPrincipal(); });
+
+        panel.getChildren().addAll(lblTit, lblSub, slots, btnMenu);
+        root.getChildren().addAll(fondo, panel);
+        escenaPrincipal.setRoot(root);
+        fadeIn(panel, 500);
+    }
+
+    private VBox tarjetaMemoria(int slot, Usuario u) {
+        VBox card = new VBox(12); card.setAlignment(Pos.TOP_CENTER);
+        card.setPrefSize(240, 300); card.setPadding(new Insets(22, 18, 22, 18));
+        card.setCursor(Cursor.HAND);
+        boolean vacio = (u == null);
+        String colorBorde = vacio ? "#1a3a1a" : C_VERDE;
+        String estiloN = "-fx-background-color:rgba(0,12,0,0.88);-fx-border-color:" + colorBorde +
+                ";-fx-border-width:1.5px;-fx-border-radius:8;-fx-background-radius:8;";
+        String estiloH = "-fx-background-color:rgba(0,30,0,0.95);-fx-border-color:" + C_CYAN +
+                ";-fx-border-width:2px;-fx-border-radius:8;-fx-background-radius:8;";
+        card.setStyle(estiloN);
+        card.setEffect(new DropShadow(20, Color.web(colorBorde)));
+        card.setOnMouseEntered(e -> card.setStyle(estiloH));
+        card.setOnMouseExited(e  -> card.setStyle(estiloN));
+
+        Label lblSlot = new Label("◈  MEMORIA_0" + slot);
+        lblSlot.setStyle("-fx-text-fill:" + C_CYAN + ";-fx-font-size:13px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+        Line sep2 = new Line(0, 0, 180, 0); sep2.setStroke(Color.web(colorBorde)); sep2.setOpacity(0.5);
+
+        if (vacio) {
+            Label lblIco = new Label("[ + ]");
+            lblIco.setStyle("-fx-text-fill:#224422;-fx-font-size:36px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+            FadeTransition ft = new FadeTransition(Duration.millis(1200), lblIco);
+            ft.setFromValue(0.3); ft.setToValue(0.85); ft.setCycleCount(Animation.INDEFINITE); ft.setAutoReverse(true); ft.play();
+            Label lblV = new Label("SLOT VACÍO");
+            lblV.setStyle("-fx-text-fill:#2a4a2a;-fx-font-size:18px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+            Label lblN = new Label("► Crear nuevo operador");
+            lblN.setStyle("-fx-text-fill:#3a6a3a;-fx-font-size:11px;-fx-font-family:'Consolas';");
+            card.getChildren().addAll(lblSlot, sep2, lblIco, lblV, lblN);
+        } else {
+            Label lblNom = new Label(u.getNombre());
+            lblNom.setStyle("-fx-text-fill:white;-fx-font-size:18px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+            double hp = u.getIntegridad();
+            String hpCol = hp > 60 ? C_VERDE : hp > 30 ? C_AMARILLO : C_ROJO;
+            ProgressBar pbHP = new ProgressBar(hp / 100.0); pbHP.setPrefWidth(190); pbHP.setPrefHeight(10);
+            pbHP.setStyle("-fx-accent:" + hpCol + ";");
+            Label lblHP = new Label("HP: " + (int)hp + "%");
+            lblHP.setStyle("-fx-text-fill:" + hpCol + ";-fx-font-size:12px;-fx-font-family:'Consolas';");
+            int nodos = u.getNivelesSuperados();
+            ProgressBar pbProg = new ProgressBar(nodos / 50.0); pbProg.setPrefWidth(190); pbProg.setPrefHeight(8);
+            pbProg.setStyle("-fx-accent:" + C_CYAN + ";");
+            Label lblProg = new Label("NODOS: " + nodos + " / 50");
+            lblProg.setStyle("-fx-text-fill:" + C_CYAN + ";-fx-font-size:11px;-fx-font-family:'Consolas';");
+            Label lblBTC = new Label("BTC: " + u.getCriptos());
+            lblBTC.setStyle("-fx-text-fill:" + C_AMARILLO + ";-fx-font-size:12px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+            Label lblCap = new Label("► " + obtenerCapituloActual(u));
+            lblCap.setStyle("-fx-text-fill:#888888;-fx-font-size:11px;-fx-font-family:'Consolas';");
+            card.getChildren().addAll(lblSlot, sep2, lblNom, pbHP, lblHP, pbProg, lblProg, lblBTC, lblCap);
+        }
+        return card;
+    }
+
+    private String obtenerCapituloActual(Usuario u) {
+        for (int n = 50; n >= 1; n--) {
+            if (u.isNivelCompletado(n)) {
+                if (n >= 42) return "ZONA: DDoS OMEGA";
+                if (n >= 32) return "ZONA: SQL INJECT";
+                if (n >= 22) return "ZONA: CRIPTOGRAFÍA";
+                if (n >= 12) return "ZONA: FIREWALL";
+                if (n >= 2)  return "ZONA: PHISHING";
+                return "NÚCLEO DESBLOQUEADO";
+            }
+        }
+        return "ZONA: INICIO";
     }
 
     // =========================================================================
@@ -467,61 +554,206 @@ public class CyberMathApp extends Application {
     // =========================================================================
 
     private void mostrarCreacionPerfil(int slot) {
-        VBox root = new VBox(25);
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("root");
-        root.setPadding(new Insets(40));
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color:" + C_FONDO + ";");
+        Canvas fondo = crearCanvasMatrix();
+
+        VBox panelOuter = new VBox(16); panelOuter.setAlignment(Pos.CENTER);
+        panelOuter.setMaxWidth(540);
 
         Label titulo = new Label("◈  ESTABLECER NUEVO ENLACE  ◈");
         titulo.setStyle("-fx-font-size:26px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + C_CYAN + ";");
         titulo.setEffect(new DropShadow(15, Color.web(C_CYAN)));
-
         Label subtitulo = new Label("ASIGNACIÓN DE MEMORIA: SLOT 0" + slot);
         subtitulo.setStyle("-fx-text-fill:" + C_VERDE + ";-fx-font-size:14px;-fx-font-family:'Consolas';");
 
-        VBox panel = new VBox(20);
-        panel.setAlignment(Pos.CENTER);
-        panel.setMaxWidth(500);
-        panel.setStyle("-fx-background-color:rgba(0,18,0,0.90);" +
+        VBox panel = new VBox(20); panel.setAlignment(Pos.CENTER); panel.setMaxWidth(500);
+        panel.setStyle("-fx-background-color:rgba(0,18,0,0.92);" +
                 "-fx-border-color:" + C_VERDE + ";-fx-border-width:1.5px;" +
                 "-fx-padding:30;-fx-background-radius:5;-fx-border-radius:5;");
 
         Label instruccion = new Label("INGRESE SU ALIAS DE OPERADOR:");
         instruccion.setStyle("-fx-text-fill:white;-fx-font-size:14px;-fx-font-family:'Consolas';");
+        TextField txtAlias = new TextField(); txtAlias.setPromptText("HACKER_0" + slot);
+        txtAlias.setMaxWidth(350); txtAlias.setAlignment(Pos.CENTER);
 
-        TextField txtAlias = new TextField();
-        txtAlias.setPromptText("HACKER_0" + slot);
-        txtAlias.setMaxWidth(350);
-        txtAlias.setAlignment(Pos.CENTER);
-
-        HBox botones = new HBox(20);
-        botones.setAlignment(Pos.CENTER);
-
-        Button btnConectar = btnAncho("[ INICIALIZAR ]", 200);
-        btnConectar.setDefaultButton(true);
+        HBox botones = new HBox(20); botones.setAlignment(Pos.CENTER);
+        Button btnConectar = btnAncho("[ INICIALIZAR ]", 200); btnConectar.setDefaultButton(true);
         Button btnCancelar = btnAncho("[ CANCELAR ]", 200);
-
         botones.getChildren().addAll(btnCancelar, btnConectar);
         panel.getChildren().addAll(instruccion, txtAlias, botones);
 
-        btnCancelar.setOnAction(e -> mostrarSelectorSlots());
+        btnCancelar.setOnAction(e -> { detenerAnimacionMatrix(); mostrarSelectorSlots(); });
         btnConectar.setOnAction(e -> {
             String alias = txtAlias.getText().trim().toUpperCase();
             jugador = new Usuario(alias.isEmpty() ? "HACKER_0" + slot : alias);
             if (jugador.getNombre().equals("ROOT") || jugador.getNombre().equals("ADMIN")) {
                 jugador.activarGodMode();
-                System.out.println("[!] ADVERTENCIA: Privilegios ROOT detectados. Red comprometida.");
+                nivelDesbloqueadoEval = 50;
+                System.out.println("[!] ADVERTENCIA: Privilegios ROOT detectados.");
+            } else {
+                nivelDesbloqueadoEval = -1;
             }
             GestorDB.guardarUsuario(jugador, slotActual);
             audio.playSuccess();
-            mostrarMapaArbol();
+            detenerAnimacionMatrix();
+            if (nivelDesbloqueadoEval == -1) mostrarEvaluacionInicial();
+            else mostrarMapaArbol();
         });
 
-        root.getChildren().addAll(titulo, subtitulo, panel);
+        panelOuter.getChildren().addAll(titulo, subtitulo, panel);
+        VBox centrador = new VBox(); centrador.setAlignment(Pos.CENTER);
+        centrador.getChildren().add(panelOuter);
+        root.getChildren().addAll(fondo, centrador);
         aplicarEfectoTema(root);
         escenaPrincipal.setRoot(root);
-        fadeIn(root, 300);
+        fadeIn(panelOuter, 300);
         Platform.runLater(txtAlias::requestFocus);
+    }
+
+    // =========================================================================
+    // EVALUACIÓN DIAGNÓSTICA INICIAL
+    // =========================================================================
+
+    private int nivelDesbloqueadoEval = 0;
+
+    private void mostrarEvaluacionInicial() {
+        final Object[][] PREGUNTAS_EVAL = {
+                {"¿Cuánto es  3 + 5 × 2?",                         13.0,  5},
+                {"Resuelve:  (12 ÷ 4) + 7 − 2",                    8.0,   8},
+                {"¿Cuánto es  2³ + 4²?",                           24.0, 11},
+                {"Simplifica:  3x = 21  →  x = ?",                  7.0, 15},
+                {"Derivada de  f(x) = 5x²  en x=3  →  f'(3) = ?", 30.0, 20},
+        };
+        final int[] pregActual    = {0};
+        final int[] nivelAlcanzado = {0};
+
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color:" + C_FONDO + ";");
+        Canvas fondo = crearCanvasMatrix();
+
+        VBox panel = new VBox(20); panel.setAlignment(Pos.CENTER); panel.setMaxWidth(680);
+        panel.setPadding(new Insets(40, 40, 40, 40));
+        panel.setStyle("-fx-background-color:rgba(0,14,0,0.88);" +
+                "-fx-border-color:" + C_CYAN + ";-fx-border-width:1.5px;" +
+                "-fx-border-radius:10;-fx-background-radius:10;");
+
+        Label lblTit = new Label("◈  DIAGNÓSTICO DE CONOCIMIENTO  ◈");
+        lblTit.setStyle("-fx-font-size:20px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + C_CYAN + ";");
+        lblTit.setEffect(new DropShadow(14, Color.web(C_CYAN)));
+
+        Label lblDesc = new Label("Responde para desbloquear niveles avanzados desde el inicio.");
+        lblDesc.setStyle("-fx-text-fill:#5a8a5a;-fx-font-size:12px;-fx-font-family:'Consolas';");
+
+        ProgressBar pbEval = new ProgressBar(0); pbEval.setPrefWidth(460); pbEval.setPrefHeight(8);
+        pbEval.setStyle("-fx-accent:" + C_CYAN + ";");
+        Label lblProg = new Label("Pregunta 1 / " + PREGUNTAS_EVAL.length);
+        lblProg.setStyle("-fx-text-fill:#3a8a6a;-fx-font-size:11px;-fx-font-family:'Consolas';");
+
+        Label lblPregunta = new Label((String) PREGUNTAS_EVAL[0][0]);
+        lblPregunta.setStyle("-fx-text-fill:white;-fx-font-size:20px;-fx-font-weight:bold;" +
+                "-fx-font-family:'Consolas';-fx-background-color:rgba(0,30,20,0.8);" +
+                "-fx-padding:16 24;-fx-background-radius:6;");
+        lblPregunta.setWrapText(true);
+
+        TextField txtResp = new TextField(); txtResp.setMaxWidth(260); txtResp.setAlignment(Pos.CENTER);
+        txtResp.setStyle("-fx-font-size:18px;-fx-font-family:'Consolas';");
+
+        Label lblFeed = new Label("");
+        lblFeed.setStyle("-fx-font-size:13px;-fx-font-family:'Consolas';-fx-font-weight:bold;");
+
+        Button btnResp = btnAncho("[ RESPONDER ]", 260);
+        Button btnSalt = new Button("Saltar evaluación →");
+        btnSalt.setStyle("-fx-background-color:transparent;-fx-text-fill:#2a4a2a;" +
+                "-fx-font-family:'Consolas';-fx-font-size:11px;-fx-cursor:hand;");
+
+        Runnable avanzar = () -> {
+            int sig = pregActual[0] + 1;
+            if (sig >= PREGUNTAS_EVAL.length) {
+                nivelDesbloqueadoEval = nivelAlcanzado[0];
+                detenerAnimacionMatrix();
+                mostrarResultadoEvaluacion(nivelDesbloqueadoEval);
+            } else {
+                pregActual[0] = sig;
+                lblPregunta.setText((String) PREGUNTAS_EVAL[sig][0]);
+                pbEval.setProgress((double) sig / PREGUNTAS_EVAL.length);
+                lblProg.setText("Pregunta " + (sig + 1) + " / " + PREGUNTAS_EVAL.length);
+                lblFeed.setText(""); txtResp.clear();
+                Platform.runLater(txtResp::requestFocus);
+            }
+        };
+
+        btnResp.setOnAction(e -> {
+            try {
+                double resp = Double.parseDouble(txtResp.getText().trim().replace(",", "."));
+                double ok   = (double) PREGUNTAS_EVAL[pregActual[0]][1];
+                if (Math.abs(resp - ok) < 0.01) {
+                    audio.playSuccess();
+                    nivelAlcanzado[0] = (int) PREGUNTAS_EVAL[pregActual[0]][2];
+                    lblFeed.setText("✓  CORRECTO — nodos hasta #" + nivelAlcanzado[0] + " desbloqueados");
+                    lblFeed.setStyle("-fx-text-fill:" + C_VERDE + ";-fx-font-size:13px;-fx-font-family:'Consolas';");
+                } else {
+                    audio.playError();
+                    lblFeed.setText("✗  Incorrecto. Respuesta: " + (int) ok);
+                    lblFeed.setStyle("-fx-text-fill:" + C_ROJO + ";-fx-font-size:13px;-fx-font-family:'Consolas';");
+                }
+                pausar(900, avanzar);
+            } catch (NumberFormatException ex) {
+                lblFeed.setText("Solo números, por favor.");
+                lblFeed.setStyle("-fx-text-fill:" + C_AMARILLO + ";-fx-font-size:12px;-fx-font-family:'Consolas';");
+            }
+        });
+        txtResp.setOnAction(e2 -> btnResp.fire());
+        btnSalt.setOnAction(e -> { nivelDesbloqueadoEval = 0; detenerAnimacionMatrix(); mostrarMapaArbol(); });
+
+        panel.getChildren().addAll(lblTit, lblDesc, pbEval, lblProg, lblPregunta, txtResp, btnResp, lblFeed, btnSalt);
+        VBox cen = new VBox(); cen.setAlignment(Pos.CENTER); cen.getChildren().add(panel);
+        root.getChildren().addAll(fondo, cen);
+        escenaPrincipal.setRoot(root); fadeIn(panel, 400);
+        Platform.runLater(txtResp::requestFocus);
+    }
+
+    private void mostrarResultadoEvaluacion(int nivelDesbloqueado) {
+        StackPane root = new StackPane();
+        root.setStyle("-fx-background-color:" + C_FONDO + ";");
+        Canvas fondo = crearCanvasMatrix();
+
+        VBox panel = new VBox(20); panel.setAlignment(Pos.CENTER); panel.setMaxWidth(600);
+        panel.setPadding(new Insets(50, 40, 50, 40));
+        panel.setStyle("-fx-background-color:rgba(0,14,0,0.90);" +
+                "-fx-border-color:" + C_VERDE + ";-fx-border-width:1.5px;-fx-border-radius:10;-fx-background-radius:10;");
+
+        Label lblTit = new Label("◈  EVALUACIÓN COMPLETADA  ◈");
+        lblTit.setStyle("-fx-font-size:22px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + C_VERDE + ";");
+        lblTit.setEffect(new DropShadow(16, Color.web(C_VERDE)));
+
+        String rango; String colorRango;
+        if      (nivelDesbloqueado >= 20) { rango = "EXPERTO  ★★★★★"; colorRango = C_AMARILLO; }
+        else if (nivelDesbloqueado >= 15) { rango = "AVANZADO ★★★★";  colorRango = C_CYAN; }
+        else if (nivelDesbloqueado >= 11) { rango = "MEDIO    ★★★";   colorRango = "#cc00ff"; }
+        else if (nivelDesbloqueado >=  5) { rango = "BÁSICO   ★★";    colorRango = "#ff6600"; }
+        else                              { rango = "NOVATO   ★";      colorRango = "#888888"; }
+
+        Label lblRango = new Label(rango);
+        lblRango.setStyle("-fx-font-size:24px;-fx-font-weight:900;-fx-font-family:'Consolas';-fx-text-fill:" + colorRango + ";");
+        lblRango.setEffect(new DropShadow(18, Color.web(colorRango)));
+
+        Label lblInfo = new Label(nivelDesbloqueado > 0
+                ? "Niveles 1 – " + nivelDesbloqueado + " desbloqueados desde el inicio."
+                : "Empezarás desde el Nivel 1.");
+        lblInfo.setStyle("-fx-text-fill:white;-fx-font-size:14px;-fx-font-family:'Consolas';");
+
+        ProgressBar pbRes = new ProgressBar(nivelDesbloqueado / 20.0);
+        pbRes.setPrefWidth(400); pbRes.setPrefHeight(14);
+        pbRes.setStyle("-fx-accent:" + colorRango + ";");
+
+        Button btnInic = btnAncho("[ INICIAR MISIÓN ]", 300);
+        btnInic.setOnAction(e -> { detenerAnimacionMatrix(); mostrarMapaArbol(); });
+
+        panel.getChildren().addAll(lblTit, lblRango, pbRes, lblInfo, btnInic);
+        VBox cen = new VBox(); cen.setAlignment(Pos.CENTER); cen.getChildren().add(panel);
+        root.getChildren().addAll(fondo, cen);
+        escenaPrincipal.setRoot(root); fadeIn(panel, 350);
     }
 
     private VBox tarjetaSlot(int slot, Usuario u) {
@@ -562,10 +794,15 @@ public class CyberMathApp extends Application {
     // MAPA ÁRBOL — FIX FONDO MATRIX + TOPBAR COMPACTA + TEMA UI FUNCIONAL
     // =========================================================================
 
+    // =========================================================================
+    // MAPA LINEAL — estilo Coddy
+    // =========================================================================
+
     private boolean isDesbloqueado(int nivel) {
+        if (nivel <= 0 || nivel > 50) return false;
         if (nivel == 1) return true;
-        if (nivel == 2 || nivel == 12 || nivel == 22 || nivel == 32 || nivel == 42)
-            return jugador.isNivelCompletado(1);
+        if (jugador.isNivelCompletado(nivel)) return true;
+        if (nivelDesbloqueadoEval >= nivel) return true;
         return jugador.isNivelCompletado(nivel - 1);
     }
 
@@ -626,14 +863,12 @@ public class CyberMathApp extends Application {
             else audio.reproducirBGM(sel);
         });
 
-        // Tema UI — solo muestra temas comprados en la tienda
+        // Tema UI — FIX: usa getTemaUI() no isPistaDesbloqueada()
         ComboBox<String> comboTema = new ComboBox<>();
         comboTema.setStyle("-fx-background-color:#001500;-fx-text-fill:" + C_VERDE +
                 ";-fx-border-color:#224422;-fx-font-family:'Consolas';-fx-font-size:11px;");
         comboTema.setPrefWidth(115);
-        comboTema.getItems().add("UI:NEON");
-        if (jugador.isTemaDesbloqueado("AMBAR")) comboTema.getItems().add("UI:ÁMBAR");
-        if (jugador.isTemaDesbloqueado("AZUL"))  comboTema.getItems().add("UI:CIAN");
+        comboTema.getItems().addAll("UI:NEON", "UI:ÁMBAR", "UI:CIAN");
         switch (jugador.getTemaUI()) {
             case "AMBAR": comboTema.getSelectionModel().select("UI:ÁMBAR"); break;
             case "AZUL":  comboTema.getSelectionModel().select("UI:CIAN");  break;
@@ -682,10 +917,15 @@ public class CyberMathApp extends Application {
         layout.setTop(topBar);
 
         // --- LEYENDA INFERIOR ---
-        HBox leyenda = new HBox(24); leyenda.setAlignment(Pos.CENTER);
+        HBox leyenda = new HBox(20); leyenda.setAlignment(Pos.CENTER);
         leyenda.setPadding(new Insets(7));
         leyenda.setStyle("-fx-background-color:rgba(0,8,0,0.90);-fx-border-color:#1a3a1a;-fx-border-width:1px 0 0 0;");
-        for (Object[] rama : RAMAS) leyenda.getChildren().add(itemLeyenda((String)rama[3], (String)rama[2]));
+        leyenda.getChildren().addAll(
+                itemLeyenda(C_VERDE,   "✓ COMPLETADO"),
+                itemLeyenda(C_AMARILLO,"★ ACTUAL"),
+                itemLeyenda("#2a3a2a", "⊘ BLOQUEADO"),
+                itemLeyenda(C_ROJO,    "✗ CASTIGADO")
+        );
         layout.setBottom(leyenda);
 
         // --- MAPA transparente para ver el fondo Matrix ---
@@ -779,81 +1019,128 @@ public class CyberMathApp extends Application {
     // DIBUJO DEL MAPA
     // =========================================================================
 
+    // =========================================================================
+    // DIBUJO DEL MAPA — lineal estilo Coddy
+    // Verde✓ completado | Dorado★ actual | Gris⊘ bloqueado | Rojo✗ castigado
+    // =========================================================================
+
     private void dibujarMapaEn(Pane pane) {
         pane.getChildren().clear();
-        final double MARGEN = 30, Y_RAIZ = 70, RAIZ_R = 32, NODO_R = 18, SEP_V = 62, CONECTOR_V = 55;
-        double anchoTotal = Math.max(800, escenaPrincipal.getWidth() - MARGEN * 2);
-        int    numRamas   = RAMAS.length;
-        double colAncho   = anchoTotal / numRamas;
-        double xRaiz = anchoTotal / 2.0, yRaiz = Y_RAIZ;
+        final double NODO_R   = 26;
+        final double SEP_V    = 88;
+        final double BANNER_H = 36;
+        final double X_CENTER = Math.max(380, (escenaPrincipal.getWidth() - 80) / 2.0);
+        double yAct = 60;
 
-        dibujarNodoHex(pane, xRaiz, yRaiz, 1, RAIZ_R, true, C_VERDE, "NÚCLEO");
-        double yPrimerNodo = yRaiz + RAIZ_R + CONECTOR_V;
+        // ── Nodo raíz NÚCLEO (nivel 1) ──
+        dibujarConectorPunteado(pane, X_CENTER, yAct, X_CENTER, yAct + NODO_R + SEP_V * 0.4, C_VERDE, jugador.isNivelCompletado(1));
+        dibujarNodoLineal(pane, X_CENTER, yAct + NODO_R, 1, NODO_R, "NÚCLEO");
+        yAct += NODO_R * 2 + SEP_V * 0.4;
 
-        for (int r = 0; r < numRamas; r++) {
-            int nivelIni = (int) RAMAS[r][0], nivelFin = (int) RAMAS[r][1];
-            String colorRama = (String) RAMAS[r][3], etiqueta = (String) RAMAS[r][2];
-            double colX = colAncho * r + colAncho / 2.0;
+        // ── Capítulos ──
+        for (int r = 0; r < RAMAS.length; r++) {
+            int    nivelIni  = (int)    RAMAS[r][0];
+            int    nivelFin  = (int)    RAMAS[r][1];
+            String etiqueta  = (String) RAMAS[r][2];
+            String colorRama = (String) RAMAS[r][3];
+            boolean capActiva = isDesbloqueado(nivelIni);
 
-            boolean activo = isDesbloqueado(nivelIni);
-            dibujarLinea(pane, xRaiz, yRaiz + RAIZ_R, colX, yPrimerNodo - NODO_R, activo ? colorRama : "#1c2a1c", activo);
+            // Banner del capítulo
+            double bw = 280, bx = X_CENTER - bw / 2.0;
+            Rectangle bg = new Rectangle(bx, yAct, bw, BANNER_H);
+            bg.setFill(capActiva ? Color.web(colorRama).deriveColor(0,1,0.1,0.9) : Color.web("#0a0f0a"));
+            bg.setArcWidth(6); bg.setArcHeight(6);
+            bg.setStroke(capActiva ? Color.web(colorRama) : Color.web("#1a2a1a")); bg.setStrokeWidth(1.5);
+            if (capActiva) bg.setEffect(new DropShadow(10, Color.web(colorRama)));
+            Label lblBanner = new Label("─── " + etiqueta + " ───");
+            lblBanner.setStyle("-fx-text-fill:" + (capActiva ? colorRama : "#2a3a2a") + ";" +
+                    "-fx-font-size:11px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
+            lblBanner.setLayoutX(bx + 12); lblBanner.setLayoutY(yAct + 8);
+            pane.getChildren().addAll(bg, lblBanner);
+            yAct += BANNER_H + 16;
 
-            Label lblRama = new Label(etiqueta);
-            lblRama.setStyle("-fx-text-fill:" + colorRama + ";-fx-font-size:10px;-fx-font-weight:bold;-fx-font-family:'Consolas';" +
-                    "-fx-background-color:rgba(0,0,0,0.65);-fx-padding:2 6;-fx-background-radius:3;");
-            lblRama.setLayoutX(colX - 36); lblRama.setLayoutY(yPrimerNodo + NODO_R + 3);
-            pane.getChildren().add(lblRama);
-
-            double yPrev = yPrimerNodo;
+            // Nodos del capítulo
             for (int nivel = nivelIni; nivel <= nivelFin; nivel++) {
-                double yNodo = yPrimerNodo + SEP_V * (nivel - nivelIni);
-                if (nivel > nivelIni) {
-                    boolean cab = isDesbloqueado(nivel);
-                    dibujarLinea(pane, colX, yPrev + NODO_R, colX, yNodo - NODO_R, cab ? colorRama : "#1c2a1c", cab);
+                double nodoCY = yAct + NODO_R;
+                boolean hayMas = (nivel < nivelFin) || (r < RAMAS.length - 1);
+                if (hayMas) {
+                    boolean conActivo = jugador.isNivelCompletado(nivel);
+                    dibujarConectorPunteado(pane, X_CENTER, nodoCY + NODO_R,
+                            X_CENTER, nodoCY + NODO_R + SEP_V - NODO_R * 2 + 10,
+                            conActivo ? colorRama : "#2a3a2a", conActivo);
                 }
-                dibujarNodoHex(pane, colX, yNodo, nivel, NODO_R, isDesbloqueado(nivel), colorRama, null);
-                yPrev = yNodo;
+                dibujarNodoLineal(pane, X_CENTER, nodoCY, nivel, NODO_R, null);
+                yAct += SEP_V;
+            }
+            yAct += 20;
+        }
+        pane.setPrefHeight(yAct + 80);
+        pane.setPrefWidth(Math.max(860, escenaPrincipal.getWidth() - 80));
+    }
+
+    private void dibujarConectorPunteado(Pane pane, double x, double y1, double x2, double y2, String color, boolean activo) {
+        double seg = 6, gap = 5, dist = y2 - y1, pos = 0;
+        while (pos < dist) {
+            double from = y1 + pos, to = Math.min(y1 + pos + seg, y2);
+            Line l = new Line(x, from, x, to);
+            l.setStroke(Color.web(color)); l.setStrokeWidth(activo ? 2.5 : 1.5); l.setOpacity(activo ? 0.7 : 0.25);
+            pane.getChildren().add(0, l);
+            pos += seg + gap;
+        }
+    }
+
+    private void dibujarNodoLineal(Pane pane, double cx, double cy, int nivel, double r, String etiquetaFija) {
+        boolean completado   = jugador.isNivelCompletado(nivel);
+        boolean desbloqueado = isDesbloqueado(nivel);
+        boolean esSiguiente  = !completado && desbloqueado;
+        String colorFill, colorBorde, simbolo;
+        if (nivel == 999)       { colorFill="#332200"; colorBorde=C_AMARILLO; simbolo="⚠"; }
+        else if (completado)    { colorFill="#003300"; colorBorde=C_VERDE;    simbolo="✓"; }
+        else if (esSiguiente)   { colorFill="#332200"; colorBorde=C_AMARILLO; simbolo="★"; }
+        else                    { colorFill="#0d0d0d"; colorBorde="#2a3a2a";  simbolo="⊘"; }
+
+        Polygon hex = hexagono(r); hex.setLayoutX(cx); hex.setLayoutY(cy);
+        hex.setFill(Color.web(colorFill)); hex.setStroke(Color.web(colorBorde));
+        hex.setStrokeWidth(esSiguiente ? 2.5 : 1.8);
+        if (completado || esSiguiente) hex.setEffect(new DropShadow(esSiguiente ? 22 : 14, Color.web(colorBorde)));
+
+        String textoLbl = (etiquetaFija != null) ? etiquetaFija : simbolo;
+        Label lblSim = new Label(textoLbl);
+        lblSim.setStyle("-fx-text-fill:" + colorBorde + ";-fx-font-size:" + (r > 22 ? 15 : 12) + "px;" +
+                "-fx-font-weight:bold;-fx-font-family:'Consolas';");
+
+        StackPane stack = new StackPane(hex, lblSim);
+        stack.setLayoutX(cx - r); stack.setLayoutY(cy - r); stack.setPrefSize(r * 2, r * 2);
+
+        if (nivel != 999 && nivel != 1) {
+            Label lblLat = new Label(logica.getNombreRama(nivel) + "  #" + nivel);
+            lblLat.setStyle("-fx-text-fill:" + colorBorde + ";-fx-font-size:11px;-fx-font-family:'Consolas';" +
+                    "-fx-background-color:rgba(0,0,0,0.55);-fx-padding:2 8;-fx-background-radius:3;");
+            lblLat.setLayoutX(cx + r + 12); lblLat.setLayoutY(cy - 9);
+            pane.getChildren().add(lblLat);
+        }
+
+        if (esSiguiente) {
+            FadeTransition ft = new FadeTransition(Duration.millis(900), stack);
+            ft.setFromValue(0.6); ft.setToValue(1.0); ft.setCycleCount(Animation.INDEFINITE); ft.setAutoReverse(true); ft.play();
+        }
+
+        if (nivel != 999) {
+            if (desbloqueado) {
+                String estadoTip = completado ? "✓ COMPLETADO" : "► Clic para jugar";
+                Tooltip tip = new Tooltip(logica.getNombreRama(nivel) + "\nNivel #" + nivel + "\n" + estadoTip);
+                tip.setStyle("-fx-background-color:#001100;-fx-text-fill:#00ff41;-fx-font-family:'Consolas';");
+                Tooltip.install(stack, tip); stack.setCursor(Cursor.HAND);
+                stack.setOnMouseEntered(e -> hex.setStrokeWidth(3.5));
+                stack.setOnMouseExited(e  -> hex.setStrokeWidth(esSiguiente ? 2.5 : 1.8));
+                stack.setOnMouseClicked(e -> mostrarBriefingMision(nivel));
+            } else {
+                Tooltip tip = new Tooltip("NODO BLOQUEADO\nCompleta el nivel anterior primero.");
+                tip.setStyle("-fx-background-color:#0a0a0a;-fx-text-fill:#3a5a3a;-fx-font-family:'Consolas';");
+                Tooltip.install(stack, tip);
             }
         }
-
-        Random rand = new Random();
-
-        // TRAMPA HONEYPOT (15%)
-        if (rand.nextInt(100) < 15) {
-            double hx = anchoTotal * (0.2 + rand.nextDouble() * 0.6);
-            double hy = yPrimerNodo + rand.nextDouble() * (SEP_V * 8);
-            dibujarNodoHex(pane, hx, hy, 999, NODO_R + 5, true, C_AMARILLO, "HONEYPOT");
-        }
-
-        // OPERADORES ALIADOS EN PELIGRO (25%)
-        if (rand.nextInt(100) < 25) {
-            String[] aliados = {"JUAN ANGEL", "KALETH", "VALENTINA", "DOUGLAS"};
-            String aliadoActivo = aliados[rand.nextInt(aliados.length)];
-            double ax = anchoTotal * (0.1 + rand.nextDouble() * 0.8);
-            double ay = yPrimerNodo + rand.nextDouble() * (SEP_V * 9);
-
-            Polygon hexAliado = hexagono(NODO_R);
-            hexAliado.setLayoutX(ax); hexAliado.setLayoutY(ay);
-            hexAliado.setFill(Color.web("#002244"));
-            hexAliado.setStroke(Color.web("#0088ff")); hexAliado.setStrokeWidth(2);
-
-            Label lblSOS = new Label("SOS");
-            lblSOS.setStyle("-fx-text-fill:#0088ff;-fx-font-size:10px;-fx-font-weight:bold;-fx-font-family:'Consolas';");
-
-            StackPane stackAliado = new StackPane(hexAliado, lblSOS);
-            stackAliado.setLayoutX(ax - NODO_R); stackAliado.setLayoutY(ay - NODO_R);
-            stackAliado.setCursor(Cursor.HAND);
-
-            Tooltip t = new Tooltip("SEÑAL DE AUXILIO: Operador " + aliadoActivo + " interceptado.\n► Clic para asistir");
-            t.setStyle("-fx-background-color:#001100;-fx-text-fill:#0088ff;");
-            Tooltip.install(stackAliado, t);
-            stackAliado.setOnMouseClicked(e -> iniciarRescateAliado(aliadoActivo));
-
-            FadeTransition ft = new FadeTransition(Duration.millis(800), stackAliado);
-            ft.setFromValue(0.4); ft.setToValue(1.0); ft.setCycleCount(Animation.INDEFINITE); ft.setAutoReverse(true); ft.play();
-            pane.getChildren().add(stackAliado);
-        }
-        pane.setPrefSize(anchoTotal, yPrimerNodo + SEP_V * 11 + 80);
+        pane.getChildren().add(stack);
     }
 
     // =========================================================================

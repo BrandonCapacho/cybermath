@@ -26,11 +26,11 @@ public class TiendaHardware {
             comprador.gastarCriptos(item.getPrecio());
             switch (item.getEfecto()) {
                 case "CURAR_30": comprador.curar(30); break;
-                case "CURAR_100": comprador.repararTotalmente(); break;
+                case "CURAR_100": comprador.repararTotalmente(); comprador.liberarTodosLosCastigos(); break;
                 case "UPGRADE_RAM": comprador.mejorarRAM(); break;
                 case "ADD_MINER": comprador.agregarMinero(); break;
-                case "TEMA_AMBAR": comprador.desbloquearTema("AMBAR"); comprador.setTemaUI("AMBAR"); break;
-                case "TEMA_AZUL":  comprador.desbloquearTema("AZUL");  comprador.setTemaUI("AZUL");  break;
+                case "TEMA_AMBAR": comprador.setTemaUI("AMBAR"); break;
+                case "TEMA_AZUL": comprador.setTemaUI("AZUL"); break;
                 case "PISTA_1": comprador.desbloquearPista(1); break;
                 case "PISTA_2": comprador.desbloquearPista(2); break;
             }
