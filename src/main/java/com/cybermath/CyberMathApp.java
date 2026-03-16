@@ -24,7 +24,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.util.Random;
+import java.util.Random;//.
 
 public class CyberMathApp extends Application {
 
@@ -854,7 +854,7 @@ public class CyberMathApp extends Application {
                 ";-fx-border-color:#224422;-fx-font-family:'Consolas';-fx-font-size:11px;");
         comboM.setPrefWidth(145);
         comboM.getItems().add("♪ SILENCIO");
-        if (jugador.isPistaDesbloqueada(1)) comboM.getItems().add("♪ SYNTHWAVE");
+        if (jugador.isPistaDesbloqueada(1)) comboM.getItems().add("♪ EPIC");
         if (jugador.isPistaDesbloqueada(2)) comboM.getItems().add("♪ DARK ELECTRO");
         comboM.getSelectionModel().select(0);
         comboM.setOnAction(e -> {

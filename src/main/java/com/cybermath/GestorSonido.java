@@ -28,7 +28,7 @@ public class GestorSonido {
         if (bgmActual != null) bgmActual.stop();
         try {
             // Reutilizamos audios existentes para no crashear si no tienes los mp3 nuevos aún
-            String archivo = (track == 1) ? "infiltrated.mp3" : (track == 2) ? "boot.mp3" : null;
+            String archivo = (track == 1) ? "epic.mp3" : (track == 2) ? "dark.mp3" : null;
             if (archivo == null) return;
 
             URL ruta = getClass().getResource("/sounds/" + archivo);
