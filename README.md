@@ -149,11 +149,6 @@ Universidad de Santander (UDES) - Ingeniería de Sistemas
 
 ---
 
-## 📄 Licencia
-
-Este proyecto fue desarrollado con fines académicos como parte del Proyecto Integrador I. 
-
----
 
 ## 🔮 Trabajo Futuro
 
@@ -161,7 +156,9 @@ Este proyecto fue desarrollado con fines académicos como parte del Proyecto Int
 - [ ] Integración de leaderboards globales
 - [ ] Expansión del árbol de misiones con nuevas ramas temáticas
 - [ ] Sistema de logros y badges coleccionables
-- [ ] Soporte para más dominios matemáticos (teoría de números, geometría)
+- [ ] Soporte para modulo educativo de matemáticas y ciberseguridad
+- [ ] Implementacion de IA para generar nuevos retos
+- [ ] Ampliación de los requerimientos en ciberseguridad del juego
 
 ---
 
