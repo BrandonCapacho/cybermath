@@ -69,9 +69,9 @@ public class LogicaJuego {
     /** Nivel 1 — Sumas simples de acceso inicial */
     private String generarNucleo(String prefix) {
         String[] flavors = {
-                "PROBANDO ACCESO AL NÚCLEO PRIMORDIAL — ",
-                "AUTENTICANDO CREDENCIALES DE OPERADOR — ",
-                "VERIFICANDO PROTOCOLO DE ENTRADA — "
+                "PROBANDO ACCESO AL NÚCLEO PRIMORDIAL : ",
+                "AUTENTICANDO CREDENCIALES DE OPERADOR :",
+                "VERIFICANDO PROTOCOLO DE ENTRADA : "
         };
         int a = rand.nextInt(10) + 1;
         int b = rand.nextInt(10) + 1;
@@ -82,18 +82,18 @@ public class LogicaJuego {
     /** Niveles 2–11 — Phishing: Sumas (66%) y Restas (33%) con dificultad creciente */
     private String generarPhishing(String prefix, int nivel) {
         String[] flavorsVerificar = {
-                "FILTRANDO CORREO DE CEO FALSO — ",
-                "VALIDANDO FIRMA DIGITAL SOSPECHOSA — ",
-                "ANALIZANDO CABECERA SMTP ADULTERADA — ",
-                "VERIFICANDO HASH DE REMITENTE — ",
-                "AUTENTICANDO CERTIFICADO SSL FALSO — "
+                "FILTRANDO CORREO DE CEO FALSO : ",
+                "VALIDANDO FIRMA DIGITAL SOSPECHOSA : ",
+                "ANALIZANDO CABECERA SMTP ADULTERADA : ",
+                "VERIFICANDO HASH DE REMITENTE : ",
+                "AUTENTICANDO CERTIFICADO SSL FALSO : "
         };
         String[] flavorsDescartar = {
-                "BLOQUEANDO SPEAR PHISHING CORPORATIVO — ",
-                "ELIMINANDO PAYLOAD MALICIOSO — ",
-                "DESCARTANDO ADJUNTO .EXE DISFRAZADO — ",
-                "NEUTRALIZANDO LINK DE REDIRECCIÓN — ",
-                "PURGANDO SCRIPT OCULTO EN HTML — "
+                "BLOQUEANDO SPEAR PHISHING CORPORATIVO : ",
+                "ELIMINANDO PAYLOAD MALICIOSO : ",
+                "DESCARTANDO ADJUNTO .EXE DISFRAZADO : ",
+                "NEUTRALIZANDO LINK DE REDIRECCIÓN : ",
+                "PURGANDO SCRIPT OCULTO EN HTML : "
         };
 
         if (rand.nextInt(3) <= 1) {
@@ -114,19 +114,19 @@ public class LogicaJuego {
     /** Niveles 12–21 — Firewall: Sumas, Restas y Multiplicaciones de red */
     private String generarFirewall(String prefix) {
         String[] flavorsSuma = {
-                "CALCULANDO ANCHO DE BANDA DEL TÚNEL — ",
-                "MIDIENDO LATENCIA DE PAQUETES ENTRANTES — ",
-                "SUMANDO REGLAS DE TABLA ACL — "
+                "CALCULANDO ANCHO DE BANDA DEL TÚNEL :",
+                "MIDIENDO LATENCIA DE PAQUETES ENTRANTES : ",
+                "SUMANDO REGLAS DE TABLA ACL : "
         };
         String[] flavorsResta = {
-                "BLOQUEANDO PUERTOS VULNERABLES — ",
-                "REDUCIENDO SUPERFICIE DE ATAQUE — ",
-                "ELIMINANDO REGLAS OBSOLETAS DEL FIREWALL — "
+                "BLOQUEANDO PUERTOS VULNERABLES : ",
+                "REDUCIENDO SUPERFICIE DE ATAQUE : ",
+                "ELIMINANDO REGLAS OBSOLETAS DEL FIREWALL : "
         };
         String[] flavorsMult = {
-                "ENRUTANDO TRÁFICO POR CANALES CIFRADOS — ",
-                "CALCULANDO MÁSCARAS DE SUBRED — ",
-                "MULTIPLICANDO RUTAS DE ESCAPE IP — "
+                "ENRUTANDO TRÁFICO POR CANALES CIFRADOS : ",
+                "CALCULANDO MÁSCARAS DE SUBRED : ",
+                "MULTIPLICANDO RUTAS DE ESCAPE IP :"
         };
 
         int tipoOp = rand.nextInt(3);
@@ -151,15 +151,15 @@ public class LogicaJuego {
     /** Niveles 22–31 — Criptografía: Multiplicaciones y jerarquía básica */
     private String generarCriptografia(String prefix) {
         String[] flavorsMult = {
-                "GENERANDO LLAVE RSA DE SESIÓN — ",
-                "CALCULANDO MÓDULO DE CIFRADO AES — ",
-                "PROCESANDO SEED DE ENTROPÍA — ",
-                "CONSTRUYENDO BLOQUE DE HASH SHA-256 — "
+                "GENERANDO LLAVE RSA DE SESIÓN :",
+                "CALCULANDO MÓDULO DE CIFRADO AES : ",
+                "PROCESANDO SEED DE ENTROPÍA : ",
+                "CONSTRUYENDO BLOQUE DE HASH SHA-256 : "
         };
         String[] flavorsJerarquia = {
-                "CIFRANDO PAQUETE CON LLAVE PÚBLICA — ",
-                "APLICANDO FUNCIÓN DE DERIVACIÓN PBKDF2 — ",
-                "COMBINANDO VECTORES DE INICIALIZACIÓN — "
+                "CIFRANDO PAQUETE CON LLAVE PÚBLICA : ",
+                "APLICANDO FUNCIÓN DE DERIVACIÓN PBKDF2 : ",
+                "COMBINANDO VECTORES DE INICIALIZACIÓN : "
         };
 
         if (rand.nextInt(3) <= 1) {
@@ -181,19 +181,19 @@ public class LogicaJuego {
     /** Niveles 32–41 — SQL Injection: Expresiones mixtas de 3 o 4 variables */
     private String generarSQLInjection(String prefix) {
         String[] flavorsTipo0 = {
-                "SANITIZANDO PARÁMETRO WHERE CLAUSE — ",
-                "NEUTRALIZANDO UNION SELECT MALICIOSO — ",
-                "ESCAPANDO COMILLAS EN PREPARED STATEMENT — "
+                "SANITIZANDO PARÁMETRO WHERE CLAUSE : ",
+                "NEUTRALIZANDO UNION SELECT MALICIOSO : ",
+                "ESCAPANDO COMILLAS EN PREPARED STATEMENT : "
         };
         String[] flavorsTipo1 = {
-                "BLOQUEANDO DROP TABLE EN TIEMPO REAL — ",
-                "FILTRANDO CONCATENACIÓN DE QUERY DINÁMICA — ",
-                "VALIDANDO INPUT DE FORMULARIO CRÍTICO — "
+                "BLOQUEANDO DROP TABLE EN TIEMPO REAL : ",
+                "FILTRANDO CONCATENACIÓN DE QUERY DINÁMICA : ",
+                "VALIDANDO INPUT DE FORMULARIO CRÍTICO : "
         };
         String[] flavorsTipo2 = {
-                "REPARANDO ÍNDICE DE BASE DE DATOS CORROMPIDA — ",
-                "RECONSTRUYENDO TABLA TRAS INYECCIÓN — ",
-                "NORMALIZANDO ESQUEMA POST-ATAQUE — "
+                "REPARANDO ÍNDICE DE BASE DE DATOS CORROMPIDA : ",
+                "RECONSTRUYENDO TABLA TRAS INYECCIÓN : ",
+                "NORMALIZANDO ESQUEMA POST-ATAQUE : "
         };
 
         int tipoOp = rand.nextInt(3);
@@ -220,19 +220,19 @@ public class LogicaJuego {
      */
     private String generarDDoS(String prefix) {
         String[] flavorsDerivada = {
-                "MODELANDO CURVA DE TRÁFICO ENTRANTE — \n",
-                "CALCULANDO TASA DE CAMBIO DEL ANCHO DE BANDA — \n",
-                "PREDICIENDO PICO DE SATURACIÓN DE RED — \n"
+                "MODELANDO CURVA DE TRÁFICO ENTRANTE : \n",
+                "CALCULANDO TASA DE CAMBIO DEL ANCHO DE BANDA : \n",
+                "PREDICIENDO PICO DE SATURACIÓN DE RED : \n"
         };
         String[] flavorsIntegralSimple = {
-                "MIDIENDO VOLUMEN TOTAL DE PAQUETES MALICIOSOS — \n",
-                "CALCULANDO ÁREA BAJO LA CURVA DE ATAQUE — \n",
-                "INTEGRANDO FLUJO DE BOTNET EN EL TIEMPO — \n"
+                "MIDIENDO VOLUMEN TOTAL DE PAQUETES MALICIOSOS : \n",
+                "CALCULANDO ÁREA BAJO LA CURVA DE ATAQUE : \n",
+                "INTEGRANDO FLUJO DE BOTNET EN EL TIEMPO : \n"
         };
         String[] flavorsIntegralDoble = {
-                "ANALIZANDO INTERVALO CRÍTICO DE SATURACIÓN — \n",
-                "ESTIMANDO DAÑO ACUMULADO EN VENTANA DE ATAQUE — \n",
-                "MITIGANDO OLEADA CUÁNTICA DE PAQUETES — \n"
+                "ANALIZANDO INTERVALO CRÍTICO DE SATURACIÓN : \n",
+                "ESTIMANDO DAÑO ACUMULADO EN VENTANA DE ATAQUE : \n",
+                "MITIGANDO OLEADA CUÁNTICA DE PAQUETES : \n"
         };
 
         int tipoOp = rand.nextInt(3);
